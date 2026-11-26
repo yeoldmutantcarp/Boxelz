@@ -1,0 +1,2780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Elemental Sandbox · 511 Elements · Trump Animated</title>
+<style>
+  :root{--bg:#07070b;--panel:rgba(16,16,24,.9);--panel-brd:rgba(255,255,255,.09);
+    --text:#e8e8f2;--muted:#8c8ca0;--accent:#5ee0a0;--bottom-h:56px}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;margin:0;background:var(--bg);overflow:hidden;
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    color:var(--text);user-select:none;font-size:12px}
+  #stage{position:fixed;left:0;right:0;top:0;bottom:var(--bottom-h,56px)}
+  canvas{display:block;width:100%;height:100%;image-rendering:pixelated;cursor:crosshair;touch-action:none}
+  .top-hud{position:fixed;top:0;left:0;right:0;padding:8px 8px 0;z-index:20;
+    pointer-events:none;display:flex;flex-direction:column;gap:6px}
+  .bar{pointer-events:auto;background:var(--panel);border:1px solid var(--panel-brd);
+    border-radius:12px;backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,0,.6);overflow:hidden}
+  .el-tabs{display:flex;gap:2px;padding:6px 6px 0;flex-wrap:wrap;
+    border-bottom:1px solid rgba(255,255,255,.06)}
+  .tab{padding:5px 9px;border-radius:7px 7px 0 0;font-size:11px;font-weight:600;
+    cursor:pointer;background:transparent;border:none;color:var(--muted);font-family:inherit}
+  .tab:hover{color:var(--text);background:rgba(255,255,255,.05)}
+  .tab.on{color:#dffcef;background:rgba(94,224,160,.14);box-shadow:inset 0 -2px 0 var(--accent)}
+  .search-row{padding:6px 8px 0}
+  #searchInput{width:100%;padding:5px 9px;border-radius:6px;background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.10);color:var(--text);font-family:inherit;font-size:11px;outline:none}
+  .elements{display:flex;flex-wrap:wrap;gap:3px;padding:7px;max-height:20vh;overflow-y:auto;scrollbar-width:thin}
+  .elements::-webkit-scrollbar{width:6px}
+  .elements::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:3px}
+  .el{display:flex;align-items:center;gap:5px;padding:4px 8px 4px 6px;border-radius:6px;
+    background:rgba(255,255,255,.045);border:1px solid transparent;cursor:pointer;
+    font-size:10.5px;color:var(--muted);font-family:inherit;white-space:nowrap;line-height:1.1}
+  .el:hover{background:rgba(255,255,255,.10);color:var(--text)}
+  .el.on{background:rgba(94,224,160,.16);border-color:rgba(94,224,160,.55);color:#e0ffef}
+  .el.hidden{display:none}
+  .sw{width:10px;height:10px;border-radius:2px;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+  .minimap-wrap{position:fixed;top:10px;right:10px;z-index:22;border-radius:6px;overflow:hidden;
+    border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.6);pointer-events:none}
+  #minimap{display:block;width:120px;height:75px}
+  .panel{position:fixed;padding:8px 10px;background:var(--panel);border:1px solid var(--panel-brd);
+    border-radius:10px;z-index:22;backdrop-filter:blur(14px);font-size:11px;display:none}
+  .panel.show{display:block}
+  #infoPanel{bottom:70px;right:10px;min-width:160px}
+  #statsPanel{top:100px;right:10px;min-width:140px}
+  #logPanel{bottom:70px;left:10px;min-width:180px}
+  .view-ctrl{position:fixed;right:10px;top:50%;transform:translateY(-50%);z-index:22;
+    display:flex;flex-direction:column;gap:4px}
+  .view-ctrl button{width:32px;height:32px;border-radius:8px;cursor:pointer;
+    background:rgba(16,16,24,.8);border:1px solid rgba(255,255,255,.10);color:var(--text);
+    font-size:14px;font-weight:700;backdrop-filter:blur(10px)}
+  .view-ctrl button:hover{background:rgba(94,224,160,.18)}
+  .bottom-hud{position:fixed;left:0;right:0;bottom:0;padding:0 8px 10px;z-index:20;pointer-events:none}
+  .controls{display:flex;align-items:center;gap:5px;padding:8px 10px;flex-wrap:wrap}
+  .ctl{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);padding:0 2px}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:60px;height:4px;border-radius:99px;
+    background:rgba(255,255,255,.16);outline:none;cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;
+    background:var(--accent);cursor:pointer}
+  .btn{padding:5px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;
+    background:rgba(255,255,255,.06);border:1px solid var(--panel-brd);color:var(--text);font-family:inherit}
+  .btn:hover{background:rgba(255,255,255,.13)}
+  .btn.on{background:rgba(94,224,160,.18);border-color:rgba(94,224,160,.5);color:#dffcef}
+  .btn:disabled{opacity:.35;cursor:not-allowed}
+  .btn.fun{background:rgba(255,180,80,.12);border-color:rgba(255,180,80,.35)}
+  .btn.fun:hover{background:rgba(255,180,80,.22)}
+  .btn.fun.on{background:rgba(255,120,80,.28);border-color:rgba(255,120,80,.7);color:#ffd9b3}
+  .spacer{flex:1;min-width:8px}
+  .stat{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums;
+    font-family:ui-monospace,monospace;white-space:nowrap}
+  select.btn{-webkit-appearance:none;appearance:none;padding-right:18px}
+  .tooltip{position:fixed;padding:4px 8px;border-radius:5px;pointer-events:none;
+    background:rgba(10,10,18,.94);border:1px solid rgba(255,255,255,.12);font-size:11px;
+    z-index:60;display:none;white-space:pre;font-family:ui-monospace,monospace;line-height:1.4}
+  .toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 20px;
+    background:rgba(20,20,30,.94);border:1px solid var(--panel-brd);border-radius:10px;
+    font-size:12px;z-index:100;pointer-events:none;opacity:0;transition:opacity .2s}
+  .toast.show{opacity:1}
+  .panel h4{margin:0 0 5px;font-size:10px;font-weight:700;letter-spacing:1.5px;
+    text-transform:uppercase;color:var(--muted)}
+  .stat-row{display:flex;justify-content:space-between;gap:10px;padding:1px 0;
+    font-family:ui-monospace,monospace;font-size:10px}
+  .log-line{padding:1px 0;font-family:ui-monospace,monospace;font-size:10px;
+    border-top:1px solid rgba(255,255,255,.05)}
+  .log-line:first-child{border-top:0}
+  #coordPanel{bottom:70px;right:180px;font-family:ui-monospace,monospace;font-size:10px;
+    color:var(--muted);background:rgba(0,0,0,.5);padding:3px 7px;border-radius:5px;z-index:22;
+    display:block;position:fixed;pointer-events:none}
+  @media(max-width:800px){.el span:last-child{display:none}.el{padding:4px 5px}
+    input[type=range]{width:45px}#minimap{width:80px;height:50px}}
+</style>
+</head>
+<body>
+
+<div id="stage"><canvas id="view"></canvas></div>
+
+<div class="top-hud"><div class="bar">
+  <div class="el-tabs" id="tabs"></div>
+  <div class="search-row"><input type="text" id="searchInput" placeholder="Search 511 elements…"></div>
+  <div class="elements" id="elements"></div>
+</div></div>
+
+<div class="minimap-wrap"><canvas id="minimap" width="120" height="75"></canvas></div>
+<div class="view-ctrl">
+  <button id="zoomIn">+</button><button id="zoomOut">−</button><button id="zoomReset">⊙</button>
+</div>
+
+<div id="infoPanel" class="panel"><h4>Element</h4><div id="infoContent">Select an element</div></div>
+<div id="statsPanel" class="panel"><h4>Live Stats</h4><div id="statsContent">Enable from toolbar</div></div>
+<div id="logPanel" class="panel"><h4>Reaction Log</h4><div id="logContent"></div></div>
+<div id="coordPanel">—</div>
+
+<div class="bottom-hud" id="bottomHud"><div class="bar controls">
+  <div class="ctl" style="gap:3px">
+    <button class="btn" data-tool="brush">Brush</button>
+    <button class="btn" data-tool="line">Line</button>
+    <button class="btn" data-tool="rect">Rect</button>
+    <button class="btn" data-tool="fill">Fill</button>
+    <button class="btn" data-tool="erase">Erase</button>
+    <button class="btn" data-tool="eyedropper">🎨</button>
+    <button class="btn" data-tool="heat">🔥</button>
+    <button class="btn" data-tool="cool">❄️</button>
+    <button class="btn fun" data-tool="explosion">💥</button>
+    <button class="btn fun" data-tool="meteor">☄️</button>
+    <button class="btn fun" data-tool="tornado">🌀</button>
+  </div>
+  <div class="ctl">Size <input type="range" id="brush" min="1" max="30" value="5"><span class="stat" id="brushVal">5</span></div>
+  <div class="ctl">Speed <input type="range" id="speed" min="0.1" max="8" step="0.1" value="1"><span class="stat" id="speedVal">1x</span></div>
+  <button class="btn" id="undoBtn">↶</button>
+  <button class="btn" id="redoBtn">↷</button>
+  <button class="btn" id="pauseBtn">Pause</button>
+  <button class="btn" id="stepBtn">Step</button>
+  <button class="btn" id="symBtn">Mirror</button>
+  <button class="btn" id="tempBtn">Heat</button>
+  <button class="btn" id="randomBtn">🎲</button>
+  <button class="btn" id="gridBtn">Grid</button>
+  <button class="btn" id="statsBtn">Stats</button>
+  <button class="btn" id="logBtn">Log</button>
+  <button class="btn" id="weatherBtn">Rain</button>
+  <button class="btn" id="nightBtn">Night</button>
+  <button class="btn fun" id="soundBtn">🔊</button>
+  <button class="btn fun" id="slowBtn">⏱️</button>
+  <button class="btn fun" id="rainbowBtn">🌈</button>
+  <button class="btn fun" id="fullBtn">⛶</button>
+  <button class="btn" id="saveBtn">Save</button>
+  <button class="btn" id="loadBtn">Load</button>
+  <button class="btn" id="shotBtn">📷</button>
+  <button class="btn" id="clearBtn">Clear</button>
+  <button class="btn" id="resetBtn">↺</button>
+  <select class="btn" id="slotSel"><option value="1">Slot 1</option><option value="2">Slot 2</option><option value="3">Slot 3</option></select>
+  <select class="btn" id="presetSel">
+    <option value="">Scenes…</option>
+    <option value="trump">🇺🇸 Trump Rally</option>
+    <option value="garden">Garden</option><option value="volcano">Volcano</option>
+    <option value="ocean">Ocean</option><option value="forest">Forest</option>
+    <option value="winter">Winter</option><option value="reactor">Reactor</option>
+    <option value="lab">Lab</option><option value="village">Village</option>
+    <option value="city">City</option><option value="zoo">Zoo</option>
+    <option value="blank">Blank</option>
+  </select>
+  <div class="spacer"></div>
+  <span class="stat" id="fps">— fps</span>
+  <span class="stat" id="cells">—</span>
+</div></div>
+
+<div class="tooltip" id="tooltip"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ═══════════ ELEMENT SYSTEM ═══════════ */
+const ELEMENTS = [];
+const EL = {};
+function add(o) {
+  o.id = ELEMENTS.length;
+  o.variance = o.variance ?? 12;
+  o.flammable = o.flammable ?? 0;
+  o.ignition = o.ignition ?? Infinity;
+  o.dispersion = o.dispersion ?? 0;
+  o.glow = o.glow ?? null;
+  ELEMENTS.push(o);
+  EL[o.name] = o;
+  return o.id;
+}
+function batch(items) {
+  for (const it of items) add({name:it[0],cat:it[1],type:it[2],density:it[3],color:it[4],...(it[5]||{})});
+}
+
+/* ── TOOLS ── */
+const EMPTY    = add({name:'Erase',    cat:'tool',type:'empty', density:1,    color:[0,0,0],        variance:0});
+const WALL     = add({name:'Wall',     cat:'tool',type:'static',density:1e9,  color:[86,86,98],     variance:6});
+const WIRE     = add({name:'Wire',     cat:'tool',type:'static',density:8000, color:[196,132,72],   variance:10});
+const BATTERY  = add({name:'Battery',  cat:'tool',type:'static',density:9000, color:[80,180,80],    variance:10,glow:[60,200,60]});
+const CLONER   = add({name:'Cloner',   cat:'tool',type:'static',density:9000, color:[180,80,220],   variance:10,glow:[160,60,220]});
+const VOID     = add({name:'Void',     cat:'tool',type:'static',density:9000, color:[24,10,38],     variance:6, glow:[100,30,180]});
+const SPOUT    = add({name:'Spout',    cat:'tool',type:'static',density:9000, color:[40,140,200],   variance:8, glow:[40,140,200]});
+const TNT      = add({name:'TNT',      cat:'tool',type:'static',density:1000, color:[180,50,40],    variance:10,ignition:200,explosion:10});
+const NITRO    = add({name:'Nitro',    cat:'tool',type:'static',density:1100, color:[220,60,140],   variance:10,ignition:80, explosion:15});
+const HEATER   = add({name:'Heater',   cat:'tool',type:'static',density:9000, color:[220,80,40],    variance:8, glow:[255,110,40]});
+const COOLER   = add({name:'Cooler',   cat:'tool',type:'static',density:9000, color:[80,140,220],   variance:8, glow:[100,180,255]});
+const ANTIGRAV = add({name:'Antigrav', cat:'tool',type:'static',density:9000, color:[180,180,255],  variance:8, glow:[180,180,255]});
+
+/* ── GASES ── */
+const FIRE       = add({name:'Fire',       cat:'gas',type:'gas',density:0.3, color:[255,140,40],  variance:0, glow:[255,120,30]});
+const SMOKE      = add({name:'Smoke',      cat:'gas',type:'gas',density:0.4, color:[74,74,84],    variance:14});
+const STEAM      = add({name:'Steam',      cat:'gas',type:'gas',density:0.5, color:[196,212,228], variance:10,condenseName:'Water'});
+const SPARK      = add({name:'Spark',      cat:'gas',type:'gas',density:0.2, color:[220,240,255], variance:0, glow:[180,220,255]});
+const PLASMA     = add({name:'Plasma',     cat:'gas',type:'gas',density:0.15,color:[200,220,255], variance:0, glow:[180,200,255]});
+const HYDROGEN   = add({name:'Hydrogen',   cat:'gas',type:'gas',density:0.1, color:[200,220,255], variance:6, ignition:200,explosion:6});
+const METHANE    = add({name:'Methane',    cat:'gas',type:'gas',density:0.6, color:[140,200,160], variance:10,ignition:500,flammable:0.30});
+const ACID_VAPOR = add({name:'Acid Vapor', cat:'gas',type:'gas',density:0.9, color:[140,220,80],  variance:8, glow:[100,190,50]});
+
+/* ── LIQUIDS ── */
+const WATER     = add({name:'Water',     cat:'liquid',type:'liquid',density:1000, color:[56,110,220], variance:14,dispersion:3,freeze:0,freezeName:'Ice',boil:100,boilName:'Steam'});
+const LAVA      = add({name:'Lava',      cat:'liquid',type:'liquid',density:2500, color:[236,92,22],  variance:16,dispersion:1,glow:[255,90,20],freeze:850,freezeName:'Stone'});
+const MAGMA     = add({name:'Magma',     cat:'liquid',type:'liquid',density:2800, color:[255,60,10],  variance:14,dispersion:1,glow:[255,80,20],freeze:900,freezeName:'Obsidian'});
+const MOLTEN    = add({name:'Molten',    cat:'liquid',type:'liquid',density:7000, color:[255,120,40], variance:14,dispersion:1,glow:[255,140,40],freeze:1400,freezeName:'Metal'});
+const ACID      = add({name:'Acid',      cat:'liquid',type:'liquid',density:1100, color:[130,236,70], variance:14,dispersion:3,glow:[70,190,40]});
+const SALTWATER = add({name:'Saltwater', cat:'liquid',type:'liquid',density:1030, color:[100,160,210],variance:12,dispersion:3,boil:100,boilName:'Steam'});
+const LIN       = add({name:'Liq. N₂',   cat:'liquid',type:'liquid',density:808,  color:[180,220,240],variance:8, dispersion:3,glow:[120,180,220]});
+const POISON    = add({name:'Poison',    cat:'liquid',type:'liquid',density:1100, color:[140,60,180], variance:10,dispersion:3,glow:[100,40,140]});
+const BLOOD     = add({name:'Blood',     cat:'liquid',type:'liquid',density:1060, color:[160,20,30],  variance:12,dispersion:3});
+const SLIME     = add({name:'Slime',     cat:'liquid',type:'liquid',density:1200, color:[120,200,100],variance:14,dispersion:1,glow:[80,180,60]});
+const OIL       = add({name:'Oil',       cat:'liquid',type:'liquid',density:800,  color:[92,68,36],   variance:14,dispersion:2,ignition:160,flammable:0.12});
+
+/* ── POWDERS ── */
+const SAND       = add({name:'Sand',       cat:'powder',type:'powder',density:1600,color:[222,184,110],variance:18,melt:1700,meltName:'Glass'});
+const SNOW       = add({name:'Snow',       cat:'powder',type:'powder',density:300, color:[238,246,255],variance:8, melt:0,   meltName:'Water'});
+const SALT       = add({name:'Salt',       cat:'powder',type:'powder',density:2160,color:[242,242,242],variance:8});
+const SEED       = add({name:'Seed',       cat:'powder',type:'powder',density:500, color:[190,160,90], variance:14});
+const DIRT       = add({name:'Dirt',       cat:'powder',type:'powder',density:1500,color:[120,84,52],  variance:16});
+const MAGNESIUM  = add({name:'Magnesium',  cat:'powder',type:'powder',density:1700,color:[210,210,215],variance:8, ignition:400,flammable:0.40,glow:[255,255,220]});
+const ASH        = add({name:'Ash',        cat:'powder',type:'powder',density:700, color:[92,90,88],   variance:16});
+const GUNPOWDER  = add({name:'Gunpowder',  cat:'powder',type:'powder',density:900, color:[58,56,54],   variance:12,ignition:150,explosion:6});
+
+/* ── SOLIDS ── */
+const STONE    = add({name:'Stone',    cat:'solid',type:'static',density:2600,color:[112,114,126],variance:14,melt:1150,meltName:'Lava'});
+const ICE      = add({name:'Ice',      cat:'solid',type:'static',density:900, color:[160,222,246],variance:10,melt:0,meltName:'Water'});
+const WOOD     = add({name:'Wood',     cat:'solid',type:'static',density:700, color:[116,78,42],  variance:16,ignition:260,flammable:0.06});
+const GLASS    = add({name:'Glass',    cat:'solid',type:'static',density:2500,color:[170,212,226],variance:8});
+const METAL    = add({name:'Metal',    cat:'solid',type:'static',density:7800,color:[140,144,152],variance:10,melt:1500,meltName:'Molten'});
+const OBSIDIAN = add({name:'Obsidian', cat:'solid',type:'static',density:2800,color:[34,28,48],   variance:8, melt:2000,meltName:'Magma'});
+const PLANT    = add({name:'Plant',    cat:'solid',type:'static',density:400, color:[62,156,66],  variance:20,ignition:220,flammable:0.10});
+const FUNGUS   = add({name:'Fungus',   cat:'solid',type:'static',density:600, color:[180,80,150], variance:16,ignition:250,flammable:0.08});
+const IRON     = add({name:'Iron',     cat:'solid',type:'static',density:7870,color:[140,140,150],variance:10,melt:1538,meltName:'Molten'});
+const COPPER   = add({name:'Copper',   cat:'solid',type:'static',density:8900,color:[210,120,60], variance:10,melt:1300,meltName:'Molten'});
+const ZINC     = add({name:'Zinc',     cat:'metal',type:'static',density:7140,color:[180,180,195],variance:8,melt:420,meltName:'Molten'});
+const ALUMINUM = add({name:'Aluminum', cat:'metal',type:'static',density:2700,color:[200,200,210],variance:8,melt:660,meltName:'Molten'});
+const STEEL    = add({name:'Steel',    cat:'metal',type:'static',density:7850,color:[160,160,170],variance:8,melt:1500,meltName:'Molten'});
+const FLESH = add({name:'Flesh', cat:'bio',type:'static',density:1000,color:[200,80,90],variance:14,ignition:260,flammable:0.05});
+
+/* ── CREATURES ── */
+const HUMAN     = add({name:'Human',     cat:'life',type:'static',density:1000,color:[224,180,140],variance:6,ignition:300,flammable:0.05});
+const ZOMBIE    = add({name:'Zombie',    cat:'life',type:'static',density:1000,color:[110,150,100],variance:6});
+const SKELETON  = add({name:'Skeleton',  cat:'life',type:'static',density:800, color:[230,225,200],variance:6});
+const GHOST     = add({name:'Ghost',     cat:'life',type:'gas',   density:0.1, color:[200,220,255],variance:4,glow:[180,200,255]});
+const ROBOT     = add({name:'Robot',     cat:'life',type:'static',density:2000,color:[160,170,190],variance:8,glow:[120,200,240]});
+const CAT       = add({name:'Cat',       cat:'life',type:'static',density:700, color:[240,180,100],variance:10,ignition:280,flammable:0.08});
+const DOG       = add({name:'Dog',       cat:'life',type:'static',density:800, color:[180,140,80], variance:10,ignition:280,flammable:0.08});
+const BIRD      = add({name:'Bird',      cat:'life',type:'gas',   density:0.4, color:[80,140,220], variance:8, ignition:280,flammable:0.08});
+const FISH      = add({name:'Fish',      cat:'life',type:'liquid',density:900, color:[230,130,80], variance:8});
+const SPIDER    = add({name:'Spider',    cat:'life',type:'static',density:600, color:[30,20,20],   variance:6, ignition:280,flammable:0.10});
+const SNAKE     = add({name:'Snake',     cat:'life',type:'static',density:800, color:[60,140,60],  variance:10,ignition:280,flammable:0.08});
+const COW       = add({name:'Cow',       cat:'life',type:'static',density:1000,color:[240,240,240],variance:6, ignition:280,flammable:0.06});
+const CHICKEN   = add({name:'Chicken',   cat:'life',type:'static',density:600, color:[240,220,180],variance:6, ignition:280,flammable:0.10});
+const BEE       = add({name:'Bee',       cat:'life',type:'gas',   density:0.3, color:[240,200,60], variance:8, ignition:280,flammable:0.12});
+const BUTTERFLY = add({name:'Butterfly', cat:'life',type:'gas',   density:0.3, color:[200,120,220],variance:14,ignition:280,flammable:0.10});
+const WOLF      = add({name:'Wolf',      cat:'creature',type:'static',density:800,color:[120,110,100],variance:8,ignition:280,flammable:0.08});
+const FOX       = add({name:'Fox',       cat:'creature',type:'static',density:700,color:[220,120,60],variance:8,ignition:280,flammable:0.08});
+const BEAR      = add({name:'Bear',      cat:'creature',type:'static',density:1200,color:[80,50,30],variance:6,ignition:280,flammable:0.06});
+const DEER      = add({name:'Deer',      cat:'creature',type:'static',density:900,color:[180,140,100],variance:8,ignition:280,flammable:0.08});
+const RABBIT    = add({name:'Rabbit',    cat:'creature',type:'static',density:600,color:[200,180,150],variance:8,ignition:280,flammable:0.10});
+const MOUSE     = add({name:'Mouse',     cat:'creature',type:'static',density:400,color:[160,140,120],variance:8,ignition:280,flammable:0.12});
+const RAT       = add({name:'Rat',       cat:'creature',type:'static',density:500,color:[140,120,100],variance:8,ignition:280,flammable:0.12});
+const SQUIRREL  = add({name:'Squirrel',  cat:'creature',type:'static',density:500,color:[180,120,80],variance:8,ignition:280,flammable:0.10});
+const RACCOON   = add({name:'Raccoon',   cat:'creature',type:'static',density:700,color:[120,110,90],variance:8,ignition:280,flammable:0.10});
+const BADGER    = add({name:'Badger',    cat:'creature',type:'static',density:800,color:[80,70,60],variance:8,ignition:280,flammable:0.08});
+const OTTER     = add({name:'Otter',     cat:'creature',type:'static',density:800,color:[140,100,70],variance:8,ignition:280,flammable:0.08});
+const SEAL      = add({name:'Seal',      cat:'creature',type:'static',density:1000,color:[180,160,140],variance:8,ignition:280,flammable:0.06});
+const WHALE     = add({name:'Whale',     cat:'creature',type:'liquid',density:1500,color:[60,80,120],variance:8,ignition:300,flammable:0.04});
+const DOLPHIN   = add({name:'Dolphin',   cat:'creature',type:'liquid',density:1000,color:[160,180,220],variance:8,ignition:300,flammable:0.04});
+const SHARK     = add({name:'Shark',     cat:'creature',type:'liquid',density:900,color:[80,90,110],variance:8,ignition:300,flammable:0.04});
+const OCTOPUS   = add({name:'Octopus',   cat:'creature',type:'liquid',density:800,color:[200,120,140],variance:8,ignition:280,flammable:0.06});
+const SQUID     = add({name:'Squid',     cat:'creature',type:'liquid',density:700,color:[220,180,140],variance:8,ignition:280,flammable:0.06});
+const CRAB      = add({name:'Crab',      cat:'creature',type:'static',density:700,color:[220,80,60],variance:8,ignition:280,flammable:0.08});
+const LOBSTER   = add({name:'Lobster',   cat:'creature',type:'static',density:800,color:[220,60,40],variance:8,ignition:280,flammable:0.08});
+const SHRIMP    = add({name:'Shrimp',    cat:'creature',type:'liquid',density:500,color:[240,180,140],variance:8,ignition:280,flammable:0.10});
+const JELLYFISH = add({name:'Jellyfish', cat:'creature',type:'liquid',density:500,color:[220,200,240],variance:8,glow:[200,180,220]});
+const STARFISH  = add({name:'Starfish',  cat:'creature',type:'static',density:600,color:[240,140,80],variance:8,ignition:280,flammable:0.08});
+const TURTLE    = add({name:'Turtle',    cat:'creature',type:'static',density:900,color:[100,140,100],variance:6,ignition:280,flammable:0.06});
+const FROG      = add({name:'Frog',      cat:'creature',type:'static',density:600,color:[120,200,100],variance:8,ignition:280,flammable:0.10});
+const LIZARD    = add({name:'Lizard',    cat:'creature',type:'static',density:600,color:[140,180,80],variance:8,ignition:280,flammable:0.10});
+const CROCODILE = add({name:'Crocodile', cat:'creature',type:'static',density:1100,color:[80,120,80],variance:6,ignition:280,flammable:0.06});
+const EAGLE     = add({name:'Eagle',     cat:'creature',type:'gas',density:0.4,color:[80,60,40],variance:6,ignition:280,flammable:0.08});
+const OWL       = add({name:'Owl',       cat:'creature',type:'gas',density:0.4,color:[160,120,80],variance:6,ignition:280,flammable:0.08});
+const HAWK      = add({name:'Hawk',      cat:'creature',type:'gas',density:0.4,color:[140,80,50],variance:6,ignition:280,flammable:0.08});
+const PARROT    = add({name:'Parrot',    cat:'creature',type:'gas',density:0.4,color:[240,80,80],variance:10,ignition:280,flammable:0.10});
+
+/* ── FUN ELEMENTS ── */
+const FIREWORK  = add({name:'Firework',    cat:'fun',type:'static',density:200, color:[255,220,120], variance:6, glow:[255,180,80]});
+const BOUNCY    = add({name:'Bouncy Ball', cat:'fun',type:'powder',density:400, color:[255,100,200], variance:10,glow:[255,80,180]});
+const BLACKHOLE = add({name:'Black Hole',  cat:'fun',type:'static',density:9000,color:[40,5,60],     variance:4, glow:[130,20,180]});
+const PORTAL    = add({name:'Portal',      cat:'fun',type:'static',density:9000,color:[150,60,220],  variance:10,glow:[130,50,200]});
+const TRUMP     = add({name:'Trump',       cat:'fun',type:'static',density:1000,color:[245,130,60], variance:10,ignition:350,flammable:0.08});
+
+/* ── BATCH ELEMENTS ── */
+batch([
+  ['Oxygen','gas','gas',1.3,[200,230,240]],['CO₂','gas','gas',1.9,[120,140,140]],
+  ['Chlorine','gas','gas',3.2,[180,220,80],{glow:[130,180,40]}],['Neon','gas','gas',0.9,[255,120,180],{glow:[255,100,180]}],
+  ['Helium','gas','gas',0.2,[255,220,200]],['Argon','gas','gas',1.8,[200,180,240]],['SO₂','gas','gas',2.6,[200,180,60]],
+]);
+batch([
+  ['Mercury','liquid','liquid',13500,[200,200,215],{dispersion:2}],['Alcohol','liquid','liquid',790,[220,230,240],{dispersion:3,ignition:60,flammable:0.20}],
+  ['Gasoline','liquid','liquid',750,[220,180,80],{dispersion:2,ignition:120,flammable:0.25}],['Honey','liquid','liquid',1400,[230,170,50],{dispersion:1}],
+  ['Milk','liquid','liquid',1030,[240,240,235],{dispersion:3}],['Coffee','liquid','liquid',1020,[80,50,30],{dispersion:3}],
+  ['Liq. O₂','liquid','liquid',1141,[130,190,240],{dispersion:3,glow:[90,150,220]}],['Resin','liquid','liquid',1100,[210,150,80],{dispersion:1,ignition:280,flammable:0.10}],
+  ['Tar','liquid','liquid',1200,[24,20,18],{dispersion:1,ignition:200,flammable:0.05}],['Ink','liquid','liquid',1050,[20,20,40],{dispersion:3}],
+  ['Paint','liquid','liquid',1200,[80,180,140],{dispersion:2}],['Napalm','liquid','liquid',900,[220,120,40],{dispersion:2,ignition:100,flammable:0.30}],
+  ['Antifreeze','liquid','liquid',1100,[80,200,180],{dispersion:3}],['Vinegar','liquid','liquid',1010,[200,220,140],{dispersion:3}],
+]);
+batch([
+  ['Dust','powder','powder',400,[190,180,165],{ignition:500,flammable:0.10}],['Sugar','powder','powder',850,[245,240,235],{ignition:350,flammable:0.10}],
+  ['Flour','powder','powder',500,[240,235,220],{ignition:380,explosion:5}],['Coal Dust','powder','powder',600,[40,40,48],{ignition:350,flammable:0.15}],
+  ['Iron Dust','powder','powder',1400,[120,120,130],{ignition:300,flammable:0.20}],['Gold Dust','powder','powder',1900,[220,190,80]],
+  ['Rust','powder','powder',1500,[160,90,50]],['Gravel','powder','powder',1700,[110,108,105]],
+  ['Clay','powder','powder',1300,[180,120,90]],['Concrete','powder','powder',1400,[160,158,152]],
+  ['Bone','powder','powder',1400,[230,220,190]],['Pollen','powder','powder',200,[240,220,110],{flammable:0.05}],
+  ['Sulfur','powder','powder',2000,[240,220,60],{ignition:250,flammable:0.15,glow:[200,180,40]}],['Saltpeter','powder','powder',2100,[230,225,210],{ignition:400,flammable:0.10}],
+  ['Charcoal','powder','powder',500,[30,28,28],{ignition:400,flammable:0.10}],['Phosphorus','powder','powder',1800,[240,180,90],{ignition:34,flammable:0.60,glow:[255,220,100]}],
+  ['Lithium','powder','powder',530,[220,220,230],{ignition:180,flammable:0.40,glow:[240,240,255]}],
+]);
+batch([
+  ['Coal','solid','static',1400,[36,36,42],{ignition:400,flammable:0.04}],['Brick','solid','static',2200,[160,80,60]],
+  ['Gold','solid','static',19300,[240,200,50],{melt:1064,meltName:'Molten'}],['Silver','solid','static',10500,[210,210,220],{melt:961,meltName:'Molten'}],
+  ['Lead','solid','static',11300,[130,130,140],{melt:327,meltName:'Molten'}],['Platinum','solid','static',21500,[200,200,205],{melt:1768,meltName:'Molten'}],
+  ['Diamond','solid','static',3500,[220,240,255],{glow:[200,230,255]}],['Emerald','solid','static',2800,[80,220,120],{glow:[60,180,80]}],
+  ['Ruby','solid','static',4000,[220,40,60],{glow:[180,40,60]}],['Sapphire','solid','static',4000,[60,80,220],{glow:[50,70,180]}],
+  ['Quartz','solid','static',2650,[230,220,240]],['Marble','solid','static',2700,[240,240,245]],
+  ['Granite','solid','static',2700,[160,140,140]],['Sandstone','solid','static',2200,[200,170,120]],
+  ['Limestone','solid','static',2400,[220,210,180]],['Rubber','solid','static',1200,[30,30,35],{ignition:300,flammable:0.08}],
+  ['Wax','solid','static',900,[250,240,210],{ignition:250,flammable:0.10,melt:60,meltName:'Molten'}],['Amber','solid','static',1100,[220,160,50],{glow:[200,140,40]}],
+  ['Coral','solid','static',1500,[240,140,160]],
+]);
+batch([
+  ['Skin','bio','static',900,[220,180,150],{ignition:280,flammable:0.05}],['Brain','bio','static',1000,[240,200,200],{ignition:280,flammable:0.05}],
+  ['Heart','bio','static',1050,[180,30,50],{ignition:280,flammable:0.05}],['Eye','bio','static',1000,[240,240,240]],
+  ['Tooth','bio','static',2200,[250,250,235]],['Horn','bio','static',1500,[200,180,140]],
+  ['Claw','bio','static',1500,[80,60,50]],['Feather','bio','powder',100,[230,230,240],{ignition:280,flammable:0.15}],
+  ['Fur','bio','powder',200,[180,140,90],{ignition:280,flammable:0.15}],['Scale','bio','powder',500,[120,180,140]],
+]);
+batch([
+  ['Ammonia','gas','gas',0.77,[220,230,240]],['CO','gas','gas',1.25,[140,140,150],{ignition:600,flammable:0.15}],
+  ['N₂O','gas','gas',1.9,[180,220,240]],['Xenon','gas','gas',5.9,[180,160,240],{glow:[140,120,220]}],
+  ['Krypton','gas','gas',3.7,[180,220,180]],['Ozone','gas','gas',2.1,[100,180,220],{glow:[80,140,200]}],
+  ['Radon','gas','gas',9.7,[220,100,220],{glow:[200,80,200]}],['Ethane','gas','gas',1.36,[200,220,200],{ignition:500,flammable:0.25}],
+  ['Propane','gas','gas',2.0,[220,220,180],{ignition:450,flammable:0.30}],['Butane','gas','gas',2.5,[220,210,190],{ignition:400,flammable:0.30}],
+  ['Acetylene','gas','gas',1.1,[240,220,180],{ignition:300,explosion:8}],['Bromine','gas','gas',7.1,[180,60,80],{glow:[140,40,60]}],
+]);
+batch([
+  ['Beer','liquid','liquid',1010,[220,180,80],{dispersion:3}],['Wine','liquid','liquid',990,[140,30,60],{dispersion:3}],
+  ['Vodka','liquid','liquid',950,[240,245,250],{dispersion:3,ignition:60,flammable:0.15}],['Juice','liquid','liquid',1040,[240,180,60],{dispersion:3}],
+  ['Syrup','liquid','liquid',1300,[200,140,60],{dispersion:1}],['Soup','liquid','liquid',1050,[200,160,100],{dispersion:2}],
+  ['Urine','liquid','liquid',1020,[240,220,120],{dispersion:3}],['Sweat','liquid','liquid',1010,[230,230,210],{dispersion:3}],
+  ['Tears','liquid','liquid',1010,[220,240,250],{dispersion:3}],['Saliva','liquid','liquid',1005,[240,250,250],{dispersion:3}],
+  ['Bile','liquid','liquid',1020,[180,180,40],{dispersion:2}],['Gastric Acid','liquid','liquid',1020,[180,200,40],{dispersion:3,glow:[140,160,30]}],
+  ['Liq. He','liquid','liquid',125,[220,230,255],{dispersion:3,glow:[180,200,255]}],['Liq. Ar','liquid','liquid',1395,[200,180,240],{dispersion:3,glow:[160,140,200]}],
+  ['Molten Salt','liquid','liquid',1500,[250,240,200],{dispersion:2,glow:[240,200,100]}],['Molten Glass','liquid','liquid',2400,[240,200,140],{dispersion:1,glow:[240,180,100],freeze:1000,freezeName:'Glass'}],
+  ['Molten Wax','liquid','liquid',850,[250,240,200],{dispersion:2,glow:[240,200,120],freeze:50,freezeName:'Wax'}],['Molten Plastic','liquid','liquid',1050,[200,180,160],{dispersion:2,freeze:130,freezeName:'Plastic'}],
+]);
+batch([
+  ['Pepper','powder','powder',450,[40,30,25],{ignition:400,flammable:0.10}],['Cinnamon','powder','powder',560,[160,100,50],{ignition:400,flammable:0.10}],
+  ['Cocoa','powder','powder',600,[80,50,30],{ignition:400,flammable:0.10}],['Turmeric','powder','powder',600,[240,200,40]],
+  ['Paprika','powder','powder',550,[200,80,30],{ignition:400,flammable:0.10}],['Sawdust','powder','powder',400,[200,170,120],{ignition:300,flammable:0.15}],
+  ['Coffee Grd','powder','powder',500,[60,40,30]],['Tea Leaves','powder','powder',400,[80,100,50]],
+  ['Mud','powder','powder',1800,[80,60,40]],['Graphite','powder','powder',2200,[60,60,70]],
+]);
+batch([
+  ['Aluminum Oxide','solid','static',3900,[220,220,220]],['Silicon','solid','static',2300,[140,140,150]],
+  ['Potassium','solid','static',860,[200,180,140],{ignition:150,flammable:0.50,glow:[240,220,200]}],['Sodium','solid','static',970,[240,240,240],{ignition:120,flammable:0.50,glow:[255,255,255]}],
+  ['Calcium','solid','static',1550,[220,220,220],{ignition:400,flammable:0.15}],['Tin','solid','static',7300,[180,190,200],{melt:232,meltName:'Molten'}],
+  ['Nickel','solid','static',8900,[170,170,180],{melt:1455,meltName:'Molten'}],['Chromium','solid','static',7200,[200,200,210],{melt:1907,meltName:'Molten'}],
+  ['Bronze','solid','static',8800,[200,140,80],{melt:950,meltName:'Molten'}],['Brass','solid','static',8500,[220,180,100],{melt:900,meltName:'Molten'}],
+  ['Stainless','solid','static',7900,[180,180,190],{melt:1500,meltName:'Molten'}],['Paper','solid','static',800,[240,235,220],{ignition:230,flammable:0.20}],
+  ['Cardboard','solid','static',600,[180,140,100],{ignition:280,flammable:0.15}],['Cloth','solid','static',600,[160,120,80],{ignition:280,flammable:0.20}],
+  ['Leather','solid','static',900,[120,80,50],{ignition:280,flammable:0.10}],['Plastic','solid','static',1000,[200,180,160],{ignition:300,flammable:0.10,melt:130,meltName:'Molten Plastic'}],
+]);
+batch([
+  ['Wool','solid','static',400,[230,220,200],{ignition:280,flammable:0.20}],['Silk','solid','static',500,[220,200,180],{ignition:280,flammable:0.20}],
+  ['Cotton','solid','static',500,[240,235,220],{ignition:280,flammable:0.25}],['Styrofoam','solid','static',50,[240,240,240],{ignition:280,flammable:0.20}],
+  ['Ceramic','solid','static',2400,[200,180,160]],['Porcelain','solid','static',2400,[250,250,245]],
+  ['Cement','solid','static',2800,[180,180,175]],['Asphalt','solid','static',2200,[40,35,35],{ignition:400,flammable:0.05}],
+  ['Basalt','solid','static',2900,[60,60,70]],['Pumice','solid','static',600,[180,170,160]],
+  ['Chalk','solid','static',2400,[240,240,235]],['Slate','solid','static',2700,[80,80,90]],
+  ['Flint','solid','static',2600,[50,50,60]],['Shale','solid','static',2500,[90,85,80]],
+  ['Coconut','solid','static',800,[140,90,60],{ignition:280,flammable:0.10}],['Cobalt','solid','static',8900,[80,100,200],{melt:1495,meltName:'Molten'}],
+  ['Talc','solid','static',2700,[240,240,230]],
+]);
+batch([
+  ['Bread','food','static',500,[180,140,90],{ignition:280,flammable:0.10}],['Cheese','food','static',1000,[240,210,110],{ignition:300,flammable:0.08}],
+  ['Meat','food','static',1100,[180,60,60],{ignition:280,flammable:0.06}],['Apple','food','static',800,[220,40,50],{ignition:280,flammable:0.10}],
+  ['Orange','food','static',800,[240,140,40],{ignition:280,flammable:0.10}],['Banana','food','static',800,[240,220,80],{ignition:280,flammable:0.10}],
+  ['Grape','food','static',800,[120,60,140],{ignition:280,flammable:0.10}],['Carrot','food','static',800,[240,140,40],{ignition:280,flammable:0.10}],
+  ['Potato','food','static',800,[180,140,80],{ignition:280,flammable:0.10}],['Tomato','food','static',800,[220,40,40],{ignition:280,flammable:0.10}],
+  ['Corn','food','static',800,[240,220,100],{ignition:280,flammable:0.10}],['Rice','food','static',700,[240,240,230],{ignition:300,flammable:0.10}],
+  ['Wheat','food','static',500,[220,180,100],{ignition:280,flammable:0.15}],['Pasta','food','static',600,[240,220,160],{ignition:300,flammable:0.10}],
+  ['Pizza','food','static',900,[200,120,80],{ignition:280,flammable:0.10}],['Burger','food','static',900,[160,110,70],{ignition:280,flammable:0.10}],
+  ['Cake','food','static',700,[240,200,180],{ignition:280,flammable:0.10}],['Cookie','food','static',600,[180,140,90],{ignition:280,flammable:0.10}],
+  ['Chocolate','food','static',1000,[90,50,30],{ignition:280,flammable:0.10,melt:40,meltName:'Molten'}],['Candy','food','static',800,[240,120,180],{ignition:280,flammable:0.10}],
+  ['Ice Cream','food','static',500,[240,220,200],{melt:0,meltName:'Milk'}],['Jam','food','static',1100,[180,40,80],{ignition:280,flammable:0.05}],
+  ['Butter','food','static',900,[240,220,140],{melt:35,meltName:'Oil'}],['Egg','food','static',900,[240,230,190],{ignition:280,flammable:0.05}],
+  ['Bacon','food','static',900,[200,100,80],{ignition:280,flammable:0.10}],['Ham','food','static',900,[200,120,120],{ignition:280,flammable:0.06}],
+  ['Sausage','food','static',900,[180,100,80],{ignition:280,flammable:0.08}],['Fried Fish','food','static',900,[200,150,120],{ignition:280,flammable:0.06}],
+  ['Sushi','food','static',800,[220,180,150],{ignition:280,flammable:0.06}],['Taco','food','static',800,[200,160,80],{ignition:280,flammable:0.10}],
+]);
+batch([
+  ['Topaz','gem','static',3500,[240,190,60],{glow:[220,170,40]}],['Opal','gem','static',2100,[240,240,250],{glow:[220,220,250]}],
+  ['Amethyst','gem','static',2600,[150,80,200],{glow:[130,60,180]}],['Citrine','gem','static',2600,[240,200,80],{glow:[220,180,60]}],
+  ['Garnet','gem','static',4000,[180,40,50],{glow:[160,30,40]}],['Peridot','gem','static',3200,[180,220,80],{glow:[160,200,60]}],
+  ['Tourmaline','gem','static',3100,[220,120,180],{glow:[200,100,160]}],['Aquamarine','gem','static',2700,[150,200,220],{glow:[130,180,200]}],
+  ['Moonstone','gem','static',2600,[240,240,255],{glow:[220,220,240]}],['Sunstone','gem','static',2700,[240,180,120],{glow:[220,160,100]}],
+  ['Onyx','gem','static',2600,[40,40,50],{glow:[30,30,40]}],['Jade','gem','static',3300,[80,200,120],{glow:[60,180,100]}],
+  ['Turquoise','gem','static',2800,[80,200,220],{glow:[60,180,200]}],['Lapis','gem','static',2800,[60,80,180],{glow:[50,70,160]}],
+  ['Malachite','gem','static',4000,[80,180,100],{glow:[60,160,80]}],['Azurite','gem','static',3800,[60,120,200],{glow:[50,100,180]}],
+  ['Rhodonite','gem','static',3500,[220,120,150],{glow:[200,100,130]}],['Tanzanite','gem','static',3200,[100,80,200],{glow:[80,60,180]}],
+  ['Zircon','gem','static',4700,[220,220,240],{glow:[200,200,220]}],['Spinel','gem','static',3700,[220,40,80],{glow:[200,30,60]}],
+  ['Kyanite','gem','static',3600,[80,120,220],{glow:[60,100,200]}],['Andalusite','gem','static',3300,[180,120,100],{glow:[160,100,80]}],
+  ['Cordierite','gem','static',2600,[120,120,180],{glow:[100,100,160]}],['Apatite','gem','static',3200,[180,240,200],{glow:[160,220,180]}],
+  ['Fluorite','gem','static',3100,[200,120,240],{glow:[180,100,220]}],
+]);
+batch([
+  ['Titanium','metal','static',4500,[180,180,190],{melt:1668,meltName:'Molten'}],['Tungsten','metal','static',19300,[120,120,130],{melt:3422,meltName:'Molten'}],
+  ['Uranium','metal','static',19100,[60,180,60],{glow:[60,200,60]}],['Plutonium','metal','static',19800,[160,80,180],{glow:[180,60,200]}],
+  ['Thorium','metal','static',11700,[120,120,130],{glow:[100,100,110]}],['Osmium','metal','static',22600,[140,140,160],{melt:3033,meltName:'Molten'}],
+  ['Iridium','metal','static',22500,[180,180,200],{melt:2446,meltName:'Molten'}],['Rhodium','metal','static',12400,[200,200,220],{melt:1964,meltName:'Molten'}],
+  ['Palladium','metal','static',12000,[200,200,210],{melt:1555,meltName:'Molten'}],['Ruthenium','metal','static',12300,[160,160,180],{melt:2334,meltName:'Molten'}],
+  ['Rhenium','metal','static',21000,[180,180,190],{melt:3186,meltName:'Molten'}],['Tantalum','metal','static',16600,[140,140,160],{melt:3017,meltName:'Molten'}],
+  ['Niobium','metal','static',8570,[140,140,150],{melt:2477,meltName:'Molten'}],['Molybdenum','metal','static',10200,[140,140,160],{melt:2623,meltName:'Molten'}],
+  ['Vanadium','metal','static',6100,[140,140,160],{melt:1910,meltName:'Molten'}],['Scandium','metal','static',2985,[180,180,190],{melt:1541,meltName:'Molten'}],
+  ['Yttrium','metal','static',4470,[180,180,190],{melt:1522,meltName:'Molten'}],['Zirconium','metal','static',6510,[180,180,190],{melt:1855,meltName:'Molten'}],
+  ['Hafnium','metal','static',13300,[160,160,170],{melt:2233,meltName:'Molten'}],['Beryllium','metal','static',1850,[180,180,190],{melt:1287,meltName:'Molten'}],
+]);
+batch([
+  ['HydrogenPeroxide','chem','liquid',1100,[220,240,255],{dispersion:3}],['SulfuricAcid','chem','liquid',1840,[240,180,40],{dispersion:3,glow:[240,160,30]}],
+  ['NitricAcid','chem','liquid',1510,[240,220,120],{dispersion:3,glow:[220,200,100]}],['HydrochloricAcid','chem','liquid',1180,[180,240,120],{dispersion:3,glow:[160,220,100]}],
+  ['PhosphoricAcid','chem','liquid',1690,[220,220,180],{dispersion:3}],['SodiumHydroxide','chem','liquid',2100,[240,240,240],{dispersion:3}],
+  ['PotassiumHydroxide','chem','liquid',2040,[240,240,240],{dispersion:3}],['CalciumCarbonate','chem','liquid',2710,[240,240,235],{dispersion:2}],
+  ['BakingSoda','chem','liquid',2200,[240,240,240],{dispersion:2}],['AmmoniumNitrate','chem','liquid',1720,[240,240,240],{dispersion:2,ignition:300,explosion:8}],
+  ['PotassiumNitrate','chem','liquid',2100,[240,240,240],{dispersion:2}],['CopperSulfate','chem','liquid',3600,[60,140,220],{dispersion:2,glow:[40,120,200]}],
+  ['IronSulfate','chem','liquid',1890,[80,140,140],{dispersion:2}],['ZincSulfate','chem','liquid',3540,[240,240,240],{dispersion:2}],
+  ['MagnesiumSulfate','chem','liquid',2660,[240,240,240],{dispersion:2}],['SilverNitrate','chem','liquid',4350,[240,240,240],{dispersion:2,glow:[220,220,240]}],
+  ['LeadNitrate','chem','liquid',4530,[240,240,240],{dispersion:2}],['Permanganate','chem','liquid',2700,[80,20,60],{dispersion:2,glow:[60,10,40]}],
+  ['Thiosulfate','chem','liquid',1670,[240,240,240],{dispersion:2}],['Methanol','chem','liquid',792,[240,240,240],{dispersion:3,ignition:60,flammable:0.20}],
+  ['Acetone','chem','liquid',784,[240,240,240],{dispersion:3,ignition:50,flammable:0.30}],['Benzene','chem','liquid',876,[240,240,240],{dispersion:3,ignition:80,flammable:0.25}],
+  ['Toluene','chem','liquid',867,[240,240,240],{dispersion:3,ignition:80,flammable:0.20}],['Phenol','chem','liquid',1070,[240,240,240],{dispersion:3}],
+  ['Formaldehyde','chem','liquid',815,[240,240,240],{dispersion:3,ignition:80,flammable:0.20}],['Ether','chem','liquid',713,[240,240,240],{dispersion:3,ignition:60,explosion:5}],
+  ['Chloroform','chem','liquid',1490,[240,240,240],{dispersion:3}],['Glycerol','chem','liquid',1260,[240,240,240],{dispersion:1}],
+  ['Bleach','chem','liquid',1080,[240,240,180],{dispersion:3,glow:[220,220,140]}],['Antidote','chem','liquid',1050,[140,240,140],{dispersion:3,glow:[100,220,100]}],
+]);
+batch([
+  ['Oak','wood','static',700,[140,90,50],{ignition:260,flammable:0.06}],['Pine','wood','static',600,[160,100,60],{ignition:260,flammable:0.08}],
+  ['Birch','wood','static',650,[220,200,160],{ignition:260,flammable:0.06}],['Maple','wood','static',720,[180,120,70],{ignition:260,flammable:0.06}],
+  ['Cherry Wood','wood','static',750,[140,60,40],{ignition:260,flammable:0.06}],['Walnut','wood','static',800,[80,50,30],{ignition:260,flammable:0.06}],
+  ['Mahogany','wood','static',850,[120,50,30],{ignition:260,flammable:0.05}],['Teak','wood','static',700,[180,120,60],{ignition:260,flammable:0.06}],
+  ['Bamboo','wood','static',600,[140,180,100],{ignition:260,flammable:0.10}],['Palm','wood','static',650,[160,120,80],{ignition:260,flammable:0.08}],
+  ['Willow','wood','static',600,[180,150,100],{ignition:260,flammable:0.08}],['Cedar','wood','static',750,[140,80,50],{ignition:260,flammable:0.06}],
+  ['Ash Wood','wood','static',700,[160,140,110],{ignition:260,flammable:0.06}],['Elm','wood','static',700,[150,110,70],{ignition:260,flammable:0.06}],
+  ['Redwood','wood','static',800,[180,80,50],{ignition:260,flammable:0.06}],
+]);
+batch([
+  ['Linen','fabric','static',500,[220,210,180],{ignition:280,flammable:0.20}],['Hemp','fabric','static',550,[160,140,90],{ignition:280,flammable:0.22}],
+  ['Jute','fabric','static',500,[180,150,90],{ignition:280,flammable:0.20}],['Rayon','fabric','static',550,[230,220,200],{ignition:280,flammable:0.25}],
+  ['Nylon','fabric','static',600,[240,240,240],{ignition:300,flammable:0.15}],['Polyester','fabric','static',600,[240,240,240],{ignition:300,flammable:0.15}],
+  ['Acrylic Fab','fabric','static',600,[240,220,200],{ignition:300,flammable:0.15}],['Spandex','fabric','static',550,[240,240,240],{ignition:300,flammable:0.15}],
+  ['Velvet','fabric','static',600,[120,60,90],{ignition:280,flammable:0.20}],['Satin','fabric','static',500,[240,220,200],{ignition:280,flammable:0.20}],
+  ['Denim','fabric','static',700,[60,80,120],{ignition:280,flammable:0.15}],['Canvas','fabric','static',700,[220,200,160],{ignition:280,flammable:0.18}],
+  ['Burlap','fabric','static',500,[160,140,100],{ignition:280,flammable:0.22}],['Fleece','fabric','static',400,[240,240,240],{ignition:300,flammable:0.20}],
+  ['Tweed','fabric','static',700,[140,120,80],{ignition:280,flammable:0.15}],
+]);
+batch([
+  ['Andesite','stone','static',2700,[140,140,150],{melt:1100,meltName:'Lava'}],['Diorite','stone','static',2800,[220,220,230],{melt:1100,meltName:'Lava'}],
+  ['Gabbro','stone','static',3000,[80,80,90],{melt:1150,meltName:'Lava'}],['Schist','stone','static',2700,[140,120,100],{melt:1100,meltName:'Lava'}],
+  ['Gneiss','stone','static',2800,[180,160,140],{melt:1100,meltName:'Lava'}],['Hornfels','stone','static',2850,[100,90,90],{melt:1200,meltName:'Lava'}],
+  ['Migmatite','stone','static',2750,[180,140,120],{melt:1150,meltName:'Lava'}],['Dunite','stone','static',3200,[80,160,80],{melt:1400,meltName:'Lava'}],
+  ['Peridotite','stone','static',3300,[60,120,60],{melt:1400,meltName:'Lava'}],['Serpentinite','stone','static',2600,[80,160,100],{melt:1200,meltName:'Lava'}],
+  ['Soapstone','stone','static',2900,[180,180,170],{melt:1200,meltName:'Lava'}],['Gypsum','stone','static',2320,[240,240,230]],
+  ['Halite','stone','static',2170,[240,240,250]],['Dolomite','stone','static',2850,[240,230,220],{melt:1200,meltName:'Lava'}],
+  ['Chert','stone','static',2600,[180,160,140],{melt:1300,meltName:'Lava'}],['Agate','stone','static',2600,[200,180,150]],
+  ['Jasper','stone','static',2600,[180,60,50]],['Tuff','stone','static',2400,[180,160,140],{melt:1100,meltName:'Lava'}],
+  ['Breccia','stone','static',2400,[160,120,100],{melt:1100,meltName:'Lava'}],['Tile','stone','static',2400,[200,180,160]],
+]);
+batch([
+  ['Hail','weather','powder',900,[220,240,255],{melt:0,meltName:'Water'}],['Sleet','weather','powder',700,[200,220,240],{melt:0,meltName:'Water'}],
+  ['Drizzle','weather','liquid',1000,[180,220,255],{dispersion:3,boil:100,boilName:'Steam'}],['Mist','weather','gas',500,[220,230,240],{condense:100,condenseName:'Water'}],
+  ['Fog','weather','gas',400,[200,210,220],{condense:100,condenseName:'Water'}],['Cloud','weather','gas',100,[240,240,250],{condense:100,condenseName:'Water'}],
+  ['Thundercloud','weather','gas',100,[120,120,140],{condense:100,condenseName:'Water',glow:[180,180,220]}],['Lightning','weather','gas',1,[220,240,255],{glow:[200,220,255]}],
+  ['Tornado','weather','gas',1,[180,180,200],{glow:[140,140,180]}],['Hurricane','weather','gas',1,[120,140,180],{glow:[100,120,160]}],
+]);
+batch([
+  ['Ostrich','creature','static',800,[180,140,100],{ignition:280,flammable:0.08}],['Peacock','creature','gas',0.4,[80,140,220],{ignition:280,flammable:0.08}],
+  ['Flamingo','creature','gas',0.4,[240,140,180],{ignition:280,flammable:0.08}],['Penguin','creature','static',900,[40,40,60],{ignition:280,flammable:0.06}],
+  ['Seagull','creature','gas',0.4,[240,240,240],{ignition:280,flammable:0.08}],['Duck','creature','static',700,[240,220,100],{ignition:280,flammable:0.10}],
+  ['Goose','creature','static',900,[240,240,240],{ignition:280,flammable:0.08}],['Swan','creature','static',900,[240,240,240],{ignition:280,flammable:0.08}],
+  ['Turkey','creature','static',900,[120,60,40],{ignition:280,flammable:0.08}],['Pig','creature','static',1000,[240,180,180],{ignition:280,flammable:0.06}],
+  ['Sheep','creature','static',1000,[240,240,240],{ignition:280,flammable:0.06}],['Goat','creature','static',900,[220,200,180],{ignition:280,flammable:0.08}],
+  ['Horse','creature','static',1200,[120,80,50],{ignition:280,flammable:0.06}],['Donkey','creature','static',1000,[140,120,100],{ignition:280,flammable:0.06}],
+  ['Camel','creature','static',1100,[200,180,140],{ignition:280,flammable:0.06}],['Elephant','creature','static',1500,[140,140,150],{ignition:280,flammable:0.04}],
+  ['Giraffe','creature','static',1200,[240,220,100],{ignition:280,flammable:0.06}],['Zebra','creature','static',900,[40,40,50],{ignition:280,flammable:0.06}],
+  ['Lion','creature','static',1000,[220,180,80],{ignition:280,flammable:0.06}],['Tiger','creature','static',1000,[240,140,60],{ignition:280,flammable:0.06}],
+  ['Cheetah','creature','static',900,[240,200,80],{ignition:280,flammable:0.06}],['Leopard','creature','static',900,[240,180,80],{ignition:280,flammable:0.06}],
+  ['Monkey','creature','static',600,[160,120,80],{ignition:280,flammable:0.10}],['Ape','creature','static',900,[80,60,50],{ignition:280,flammable:0.08}],
+  ['Gorilla','creature','static',1200,[40,30,30],{ignition:280,flammable:0.06}],['Chimp','creature','static',800,[80,60,40],{ignition:280,flammable:0.08}],
+  ['Bat','creature','gas',0.3,[60,40,60],{ignition:280,flammable:0.10}],['Vulture','creature','gas',0.4,[80,60,50],{ignition:280,flammable:0.08}],
+  ['Falcon','creature','gas',0.4,[100,80,60],{ignition:280,flammable:0.08}],['Hummingbird','creature','gas',0.2,[60,180,140],{ignition:280,flammable:0.10}],
+]);
+batch([
+  ['Grass','plant','static',400,[80,180,80],{ignition:220,flammable:0.10}],['Moss','plant','static',400,[60,140,60],{ignition:220,flammable:0.10}],
+  ['Fern','plant','static',400,[80,160,80],{ignition:220,flammable:0.10}],['Vine','plant','static',400,[60,140,60],{ignition:220,flammable:0.10}],
+  ['Cactus','plant','static',500,[100,180,80],{ignition:220,flammable:0.08}],['Rose','plant','static',400,[220,60,80],{ignition:220,flammable:0.10}],
+  ['Tulip','plant','static',400,[240,140,60],{ignition:220,flammable:0.10}],['Daisy','plant','static',400,[240,240,220],{ignition:220,flammable:0.10}],
+  ['Sunflower','plant','static',450,[240,200,60],{ignition:220,flammable:0.10}],['Orchid','plant','static',400,[220,120,200],{ignition:220,flammable:0.10}],
+  ['Lily','plant','static',400,[240,220,240],{ignition:220,flammable:0.10}],['Lavender','plant','static',400,[180,140,220],{ignition:220,flammable:0.10}],
+  ['Bamboo Shoot','plant','static',450,[160,200,80],{ignition:260,flammable:0.10}],['Sapling','plant','static',450,[100,160,80],{ignition:240,flammable:0.10}],
+  ['Bush','plant','static',450,[80,160,80],{ignition:240,flammable:0.10}],['Shrub','plant','static',450,[100,140,80],{ignition:240,flammable:0.10}],
+  ['Tree','plant','static',600,[120,80,50],{ignition:260,flammable:0.08}],['Flower','plant','static',400,[240,140,180],{ignition:220,flammable:0.10}],
+  ['Mushroom','plant','static',400,[220,180,160],{ignition:260,flammable:0.10}],['Seaweed','plant','static',400,[60,120,80],{ignition:260,flammable:0.10}],
+]);
+batch([
+  ['Mortar','building','static',2200,[200,200,200]],['Plaster','building','static',1800,[240,230,220]],
+  ['Insulation','building','static',200,[240,200,180],{ignition:280,flammable:0.10}],['Drywall','building','static',900,[240,240,230]],
+  ['Plywood','building','static',700,[180,140,100],{ignition:280,flammable:0.15}],['Particle Board','building','static',700,[160,120,80],{ignition:280,flammable:0.15}],
+  ['Fiberglass','building','static',2500,[240,220,200]],['Siding','building','static',800,[200,180,160],{ignition:280,flammable:0.10}],
+  ['Shingle','building','static',1500,[60,50,50],{ignition:280,flammable:0.10}],['Rebar','building','static',7800,[140,140,150],{melt:1500,meltName:'Molten'}],
+  ['Beam','building','static',700,[140,100,60],{ignition:260,flammable:0.06}],['Pillar','building','static',2600,[200,190,180]],
+  ['Arch','building','static',2400,[200,190,180]],['Dome','building','static',2400,[200,190,180]],
+  ['Staircase','building','static',2200,[180,170,160]],['Railing','building','static',7800,[140,140,150],{melt:1500,meltName:'Molten'}],
+  ['Fence','building','static',700,[140,100,60],{ignition:260,flammable:0.06}],['Concrete Block','building','static',2200,[180,180,170]],
+  ['Cinder Block','building','static',1800,[160,150,140]],['Cobblestone','building','static',2300,[120,110,100]],
+]);
+batch([
+  ['Smoothie','drink','liquid',1040,[240,140,180],{dispersion:3}],['Milkshake','drink','liquid',1080,[240,220,220],{dispersion:2}],
+  ['Lemonade','drink','liquid',1030,[240,240,120],{dispersion:3}],['Soda','drink','liquid',1010,[220,180,120],{dispersion:3}],
+  ['Energy Drink','drink','liquid',1030,[220,240,80],{dispersion:3,glow:[180,220,60]}],['Hot Chocolate','drink','liquid',1050,[120,70,40],{dispersion:2}],
+  ['Tea','drink','liquid',1000,[180,140,80],{dispersion:3}],['Latte','drink','liquid',1020,[220,190,150],{dispersion:3}],
+  ['Espresso','drink','liquid',1030,[60,40,20],{dispersion:3}],['Cocktail','drink','liquid',990,[240,140,180],{dispersion:3}],
+  ['Whiskey','drink','liquid',950,[180,120,50],{dispersion:3,ignition:60,flammable:0.15}],['Brandy','drink','liquid',940,[180,120,80],{dispersion:3,ignition:60,flammable:0.15}],
+  ['Rum','drink','liquid',940,[240,220,140],{dispersion:3,ignition:60,flammable:0.15}],['Tequila','drink','liquid',940,[240,240,220],{dispersion:3,ignition:60,flammable:0.15}],
+  ['Sake','drink','liquid',990,[240,240,220],{dispersion:3,ignition:60,flammable:0.10}],
+]);
+batch([
+  ['Pearl','precious','static',2700,[240,240,250],{glow:[220,220,240]}],['Jet','precious','static',1300,[30,30,30],{glow:[20,20,20]}],
+  ['Tortoiseshell','precious','static',1300,[180,120,60],{glow:[160,100,40]}],['Nacre','precious','static',2700,[240,240,255],{glow:[220,220,240]}],
+  ['Coral Pink','precious','static',2700,[240,160,180],{glow:[220,140,160]}],['Black Pearl','precious','static',2700,[40,40,50],{glow:[30,30,40]}],
+  ['Star Sapphire','precious','static',4000,[80,100,240],{glow:[60,80,220]}],['Cat Eye','precious','static',3000,[180,160,100],{glow:[160,140,80]}],
+  ['Fire Opal','precious','static',2100,[240,120,60],{glow:[220,100,40]}],['Red Beryl','precious','static',2800,[240,60,80],{glow:[220,40,60]}],
+  ['Chalcedony','precious','static',2600,[220,200,220],{glow:[200,180,200]}],['Chrysoprase','precious','static',2600,[120,220,140],{glow:[100,200,120]}],
+  ['Heliodor','precious','static',2700,[240,220,80],{glow:[220,200,60]}],['Morganite','precious','static',2800,[240,180,200],{glow:[220,160,180]}],
+  ['Spessartine','precious','static',4200,[240,140,60],{glow:[220,120,40]}],
+]);
+batch([
+  ['LED','misc','static',1500,[240,240,120],{glow:[240,240,100]}],['Resistor','misc','static',1500,[180,140,100]],
+  ['Capacitor','misc','static',1400,[120,140,180]],['Transformer','misc','static',1600,[140,120,180]],
+  ['Generator','misc','static',2000,[140,140,160],{melt:1500,meltName:'Molten'}],['Motor','misc','static',1800,[140,140,160],{melt:1500,meltName:'Molten'}],
+  ['Gear','misc','static',7800,[140,140,150],{melt:1500,meltName:'Molten'}],['Spring','misc','static',7800,[160,160,170],{melt:1500,meltName:'Molten'}],
+  ['Magnet','misc','static',7500,[200,60,60],{glow:[180,40,40]}],['Compass','misc','static',3000,[200,180,120],{glow:[180,160,100]}],
+  ['Solar Panel','misc','static',1500,[40,60,120],{glow:[80,120,200]}],['Wind Turbine','misc','static',2000,[220,220,230]],
+  ['Water Wheel','misc','static',1000,[140,100,60],{ignition:260,flammable:0.06}],['Clock','misc','static',1500,[180,140,100]],
+  ['Lock','misc','static',7800,[140,140,150],{melt:1500,meltName:'Molten'}],['Key','misc','static',7800,[220,180,60],{melt:1000,meltName:'Molten'}],
+  ['Rope','misc','static',500,[180,140,90],{ignition:280,flammable:0.20}],['Chain','misc','static',7800,[140,140,150],{melt:1500,meltName:'Molten'}],
+  ['Net','misc','static',400,[180,180,180],{ignition:280,flammable:0.15}],['Hook','misc','static',7800,[140,140,150],{melt:1500,meltName:'Molten'}],
+  ['Anchor','misc','static',7800,[100,100,110],{melt:1500,meltName:'Molten'}],['Sail','misc','static',400,[240,230,210],{ignition:280,flammable:0.20}],
+  ['Wheel','misc','static',1000,[140,100,60],{ignition:260,flammable:0.06}],['Axle','misc','static',7800,[140,140,150],{melt:1500,meltName:'Molten'}],
+  ['Pulley','misc','static',7800,[140,140,150],{melt:1500,meltName:'Molten'}],['Lever','misc','static',1000,[140,100,60],{ignition:260,flammable:0.06}],
+  ['Soap','misc','static',1000,[240,240,220],{dispersion:2}],['Shampoo','misc','static',1050,[240,220,240],{dispersion:3}],
+  ['Toothpaste','misc','static',1300,[240,250,250],{dispersion:2}],['Detergent','misc','static',1100,[240,240,240],{dispersion:3}],
+  ['Medicine','misc','static',1100,[240,180,180],{dispersion:3,glow:[220,140,140]}],['Potion','misc','static',1100,[180,120,240],{dispersion:3,glow:[160,100,220]}],
+  ['Elixir','misc','static',1100,[240,220,140],{dispersion:3,glow:[220,200,100]}],['Tonic','misc','static',1050,[180,220,180],{dispersion:3,glow:[160,200,160]}],
+  ['Glitter','misc','static',900,[240,200,240],{dispersion:1,glow:[220,180,240]}],
+]);
+
+console.log('Loaded', ELEMENTS.length, 'elements');
+
+/* ═══════════ RESOLVE *Name REFS ═══════════ */
+for (const el of ELEMENTS) {
+  if (el.meltName && EL[el.meltName]) el.meltTo = EL[el.meltName].id;
+  if (el.freezeName && EL[el.freezeName]) el.freezeTo = EL[el.freezeName].id;
+  if (el.boilName && EL[el.boilName]) el.boilTo = EL[el.boilName].id;
+  if (el.condenseName && EL[el.condenseName]) el.condenseTo = EL[el.condenseName].id;
+}
+
+/* ═══════════ TRUMP PATTERN ═══════════ */
+const TRUMP_PATTERN = [
+  "   HHHHHHHHHHHHHHHH   ",
+  "  HHHHHHHHHHHHHHHHHH  ",
+  " HHHHHHHHHHHHHHHHHHHH ",
+  "HHHHHHHSSSSSSSSHHHHHHH",
+  "HHHHHSSSSSSSSSSHHHHH  ",
+  "HHHHSSSSSSSSSSSSHHHH  ",
+  "HHHSSSSSSSSSSSSSSHHH  ",
+  "HHSSSSSSSSSSSSSSSSHH  ",
+  " SSSSSSSSSSSSSSSSSSSS ",
+  " SSSSSSSSSSSSSSSSSSSS ",
+  "    SSSSSSSSSSSSSS    ",
+  "    SSSSSSSSSSSSSS    ",
+  "  BBBBBBBBBBBBBBBBBB  ",
+  "  BBBBBBBBBBBBBBBBBB  ",
+  " BBBBBBBBBBBBBBBBBBBB ",
+  " BBBBBBBBBBBBBBBBBBBB ",
+  " BBBBBBTTTTTTTTBBBBBB ",
+  " BBBBBBTTTTTTTTBBBBBB ",
+  " BBBBBBTTTTTTTTBBBBBB ",
+  " BBBBBBTTTTTTTTBBBBBB ",
+  " BBBBBBTTTTTTTTBBBBBB ",
+  " BBBBBBBBBBBBBBBBBBBB ",
+  " BBBBBBBBBBBBBBBBBBBB ",
+  "   BBBBBB    BBBBBB   ",
+  "   BBBBBB    BBBBBB   ",
+  "  BBBBBB      BBBBBB  ",
+  "  BBBBBB      BBBBBB  ",
+  "  BBBBBB      BBBBBB  ",
+];
+
+const TRUMP_COLORS = [
+  rgb(245, 130, 60),
+  rgb(255, 215, 130),
+  rgb(35, 45, 85),
+  rgb(210, 40, 40),
+  rgb(245, 245, 245),
+  rgb(240, 200, 115),
+  rgb(230, 190, 100),
+  rgb(255, 225, 145),
+  rgb(255, 240, 200),
+  rgb(255, 200, 60),
+];
+const HAIR_SHADES = [1, 5, 6, 7];
+
+function isEyeCell(lx, ly) {
+  return (ly >= 5 && ly <= 7) && ((lx >= 6 && lx <= 9) || (lx >= 13 && lx <= 16));
+}
+function isMouthCell(lx, ly) {
+  return (ly >= 8 && ly <= 9) && (lx >= 9 && lx <= 13);
+}
+
+/* ═══════════ REACTIONS ═══════════ */
+const REACTIONS = [
+  ['Lava','Water',{to:'Obsidian',other:'Steam',chance:0.6,heat:200}],
+  ['Lava','Saltwater',{to:'Obsidian',other:'Steam',chance:0.6,heat:200}],
+  ['Lava','Ice',{to:'Stone',other:'Water',chance:0.7,heat:100}],
+  ['Lava','Snow',{to:'Stone',other:'Water',chance:0.7,heat:100}],
+  ['Lava','Oil',{to:'Fire',other:'Fire',chance:1}],
+  ['Lava','Gasoline',{to:'Fire',other:'Fire',chance:1}],
+  ['Lava','Wood',{to:'Fire',other:'Fire',chance:0.8}],
+  ['Lava','Coal',{to:'Fire',other:'Fire',chance:0.8}],
+  ['Lava','Alcohol',{to:'Fire',other:'Fire',chance:1}],
+  ['Lava','Napalm',{to:'Fire',other:'Fire',chance:1}],
+  ['Lava','TNT',{to:'Fire',other:'Fire',chance:1}],
+  ['Lava','Nitro',{to:'Fire',other:'Fire',chance:1}],
+  ['Lava','Firework',{to:'Fire',chance:1,explode:3}],
+  ['Magma','Water',{to:'Obsidian',other:'Steam',chance:1,heat:300}],
+  ['Magma','Stone',{to:'Lava',chance:0.4,heat:200}],
+  ['Fire','Water',{to:'Steam',other:'Steam',chance:0.9}],
+  ['Fire','Ice',{to:'Water',chance:0.6}],
+  ['Fire','Snow',{to:'Water',chance:0.6}],
+  ['Fire','Oil',{to:'Fire',chance:0.4}],
+  ['Fire','Gasoline',{to:'Fire',chance:0.9}],
+  ['Fire','Wood',{to:'Fire',chance:0.2}],
+  ['Fire','Coal',{to:'Fire',chance:0.15}],
+  ['Fire','Hydrogen',{to:'Fire',chance:1,explode:6}],
+  ['Fire','Methane',{to:'Fire',chance:1,explode:4}],
+  ['Fire','Acetylene',{to:'Fire',chance:1,explode:8}],
+  ['Fire','Propane',{to:'Fire',chance:0.9,explode:5}],
+  ['Fire','Butane',{to:'Fire',chance:0.9,explode:5}],
+  ['Fire','Ethane',{to:'Fire',chance:0.9,explode:4}],
+  ['Fire','Gunpowder',{to:'Fire',chance:1,explode:6}],
+  ['Fire','TNT',{to:'Fire',chance:1,explode:10}],
+  ['Fire','Nitro',{to:'Fire',chance:1,explode:15}],
+  ['Fire','Firework',{to:'Fire',chance:1,explode:3}],
+  ['Fire','Magnesium',{to:'Fire',chance:1,glow:true}],
+  ['Fire','Phosphorus',{to:'Fire',chance:1}],
+  ['Fire','Sulfur',{to:'Fire',chance:0.8}],
+  ['Fire','Paper',{to:'Fire',chance:0.4}],
+  ['Fire','Cotton',{to:'Fire',chance:0.4}],
+  ['Fire','Wool',{to:'Fire',chance:0.3}],
+  ['Fire','Silk',{to:'Fire',chance:0.3}],
+  ['Fire','Leather',{to:'Fire',chance:0.2}],
+  ['Fire','Rubber',{to:'Fire',chance:0.25}],
+  ['Fire','Plastic',{to:'Fire',chance:0.2}],
+  ['Fire','Styrofoam',{to:'Fire',chance:0.35}],
+  ['Acid','Stone',{to:'Smoke',chance:0.5}],
+  ['Acid','Marble',{to:'Smoke',chance:0.6}],
+  ['Acid','Limestone',{to:'Smoke',chance:0.6}],
+  ['Acid','Chalk',{to:'Smoke',chance:0.6}],
+  ['Acid','Calcium',{to:'Hydrogen',chance:0.8}],
+  ['Acid','Zinc',{to:'Hydrogen',chance:0.9}],
+  ['Acid','Iron',{to:'Hydrogen',chance:0.9}],
+  ['Acid','Aluminum',{to:'Hydrogen',chance:0.9}],
+  ['Acid','Magnesium',{to:'Hydrogen',chance:1}],
+  ['Acid','Sodium',{to:'Fire',chance:1,heat:200}],
+  ['Acid','Potassium',{to:'Fire',chance:1,heat:200}],
+  ['Acid','Lithium',{to:'Fire',chance:1,heat:200}],
+  ['Acid','Flesh',{to:'Slime',chance:0.2}],
+  ['Acid','Wood',{to:'Smoke',chance:0.2}],
+  ['Water','Sodium',{to:'SodiumHydroxide',other:'Hydrogen',chance:1,heat:300,explode:2}],
+  ['Water','Potassium',{to:'PotassiumHydroxide',other:'Hydrogen',chance:1,heat:300,explode:2}],
+  ['Water','Lithium',{to:'Hydrogen',chance:0.8,heat:200,explode:2}],
+  ['Water','Calcium',{to:'Hydrogen',chance:0.6,heat:100}],
+  ['Water','Cement',{to:'Concrete',chance:0.1}],
+  ['Water','Sand',{to:'Mud',chance:0.02}],
+  ['Water','Dirt',{to:'Mud',chance:0.02}],
+  ['Water','Ash',{to:'Mud',chance:0.05}],
+  ['Water','Sugar',{to:'Syrup',chance:0.1}],
+  ['Water','Salt',{to:'Saltwater',chance:1}],
+  ['Water','Ozone',{to:'Oxygen',chance:0.3}],
+  ['Salt','Ice',{to:'Water',chance:0.2}],
+  ['Salt','Snow',{to:'Water',chance:0.2}],
+  ['Vinegar','BakingSoda',{to:'CO₂',other:'Water',chance:0.4,heat:100}],
+  ['Vinegar','Limestone',{to:'CO₂',other:'Water',chance:0.1}],
+  ['Bleach','Ammonia',{to:'Chlorine',other:'Chlorine',chance:0.5}],
+  ['Bleach','Acid',{to:'Chlorine',chance:0.8}],
+  ['Hydrogen','Oxygen',{to:'Water',chance:0.02}],
+  ['Hydrogen','Fire',{to:'Fire',chance:1,explode:6}],
+  ['Oxygen','Fire',{to:'Fire',chance:0.4,heat:200}],
+  ['Oxygen','Iron',{to:'Rust',chance:0.01}],
+  ['Oxygen','Magnesium',{to:'Fire',chance:1,glow:true}],
+  ['SodiumHydroxide','Acid',{to:'Salt',other:'Water',chance:0.3}],
+  ['AmmoniumNitrate','Fire',{to:'Fire',chance:1,explode:8}],
+  ['Iron','Water',{to:'Rust',chance:0.005}],
+  ['Iron','Saltwater',{to:'Rust',chance:0.02}],
+  ['Copper','Zinc',{to:'Brass',chance:0.005}],
+  ['Copper','Tin',{to:'Bronze',chance:0.005}],
+  ['Iron','Chromium',{to:'Stainless',chance:0.005}],
+  ['Iron','Coal',{to:'Steel',chance:0.02}],
+  ['Quartz','Lava',{to:'Molten Glass',chance:0.5}],
+  ['Sand','Lava',{to:'Molten Glass',chance:0.3}],
+  ['Plastic','Lava',{to:'Molten Plastic',chance:0.5}],
+  ['Wax','Lava',{to:'Molten Wax',chance:0.8}],
+  ['Poison','Human',{to:'Slime',chance:0.2}],
+  ['Poison','Flesh',{to:'Slime',chance:0.4}],
+  ['Poison','Blood',{to:'Slime',chance:0.5}],
+  ['Antidote','Poison',{to:'Water',chance:1}],
+  ['Zombie','Human',{to:'Zombie',chance:0.15}],
+  ['Zombie','Cat',{to:'Zombie',chance:0.1}],
+  ['Zombie','Dog',{to:'Zombie',chance:0.1}],
+  ['Flesh','Acid',{to:'Slime',chance:0.3}],
+  ['Flesh','Lava',{to:'Ash',chance:0.3}],
+];
+
+const RX_MAP = new Map();
+for (const [aName, bName, opt] of REACTIONS) {
+  const aEl = EL[aName], bEl = EL[bName];
+  if (!aEl || !bEl) continue;
+  const o = {...opt};
+  if (o.to) { o.to = EL[o.to]?.id; if (o.to === undefined) delete o.to; }
+  if (o.other) { o.other = EL[o.other]?.id; if (o.other === undefined) delete o.other; }
+  if (!RX_MAP.has(aEl.id)) RX_MAP.set(aEl.id, new Map());
+  RX_MAP.get(aEl.id).set(bEl.id, o);
+}
+
+/* ═══════════ WORLD STATE ═══════════ */
+const AMBIENT = 20, CHUNK = 32, CHUNK_SHIFT = 5, PIXEL = 4;
+let W = 0, H = 0, N = 0;
+let chunkCols = 0, chunkRows = 0, chunkCount = 0;
+let cells, temp, life, cvar, moved, bg, trumpOwner;
+let nextTrumpId = 1;
+const trumpUnits = [];
+let active, nextActive;
+let frame = 0, paused = false;
+let currentElement = SAND, currentTool = 'brush', brushSize = 5;
+let symmetry = false, showTemp = false, randomBrush = false;
+let showGrid = false, weatherRain = false, nightMode = false, rainbowMode = false;
+let logVisible = false;
+let soundEnabled = true;
+let slowMotion = false;
+let speedMult = 1, stepAccum = 0;
+let viewZoom = 1, viewPanX = 0, viewPanY = 0;
+let panning = false, panStartX = 0, panStartY = 0, panStartPanX = 0, panStartPanY = 0;
+let dayPhase = 0;
+let shakeAmount = 0;
+let flashAmount = 0;
+
+const canvas = document.getElementById('view');
+const ctx = canvas.getContext('2d', {alpha:false});
+const offCanvas = document.createElement('canvas');
+const offCtx = offCanvas.getContext('2d', {alpha:false});
+const glowCanvas = document.createElement('canvas');
+const glowCtx = glowCanvas.getContext('2d');
+const miniCanvas = document.getElementById('minimap');
+const miniCtx = miniCanvas.getContext('2d');
+const MINI_W = miniCanvas.width, MINI_H = miniCanvas.height;
+let imgData, buf32, glowData, glow32;
+
+/* ═══════════ HELPERS ═══════════ */
+function clamp255(v) { return v < 0 ? 0 : v > 255 ? 255 : v | 0; }
+function rgb(r,g,b) { return (255 << 24) | (clamp255(b) << 16) | (clamp255(g) << 8) | clamp255(r); }
+
+const palette = new Uint32Array(ELEMENTS.length * 8);
+for (const el of ELEMENTS) for (let k = 0; k < 8; k++) {
+  const m = 1 + (k / 7 - 0.5) * 2 * (el.variance / 100);
+  palette[el.id * 8 + k] = rgb(el.color[0]*m, el.color[1]*m, el.color[2]*m);
+}
+const FIRE_PAL = new Uint32Array(16);
+for (let k = 0; k < 16; k++) { const t = k/15; FIRE_PAL[k] = rgb(255, 60+t*190, 10+t*t*110); }
+
+function tempColor(t) {
+  const n = Math.max(0, Math.min(1, (t + 40) / 2000));
+  let r,g,b;
+  if (n < 0.2) { const s = n/0.2; r = 20+s*80; g = 60+s*180; b = 255; }
+  else if (n < 0.4) { const s = (n-0.2)/0.2; r = 100+s*155; g = 240; b = 255-s*200; }
+  else if (n < 0.6) { const s = (n-0.4)/0.2; r = 255; g = 240-s*140; b = 55-s*45; }
+  else if (n < 0.8) { const s = (n-0.6)/0.2; r = 255; g = 100-s*60; b = 10; }
+  else { const s = (n-0.8)/0.2; r = 255; g = 40+s*200; b = 10+s*240; }
+  return rgb(r,g,b);
+}
+
+/* ═══════════ AUDIO ═══════════ */
+let audioCtx = null;
+let lastSoundTime = 0;
+function ensureAudio() {
+  if (audioCtx) return;
+  try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+}
+function playSound(type, vol = 0.15) {
+  if (!soundEnabled) return;
+  ensureAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  if (now - lastSoundTime < 0.05) return;
+  lastSoundTime = now;
+  try {
+    if (type === 'explosion') {
+      const dur = 0.5;
+      const bs = Math.floor(audioCtx.sampleRate * dur);
+      const buf = audioCtx.createBuffer(1, bs, audioCtx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < bs; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/bs, 2);
+      const src = audioCtx.createBufferSource(); src.buffer = buf;
+      const f = audioCtx.createBiquadFilter();
+      f.type = 'lowpass';
+      f.frequency.setValueAtTime(800, now);
+      f.frequency.exponentialRampToValueAtTime(80, now + dur);
+      const g = audioCtx.createGain();
+      g.gain.value = vol;
+      g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+      src.connect(f).connect(g).connect(audioCtx.destination);
+      src.start(now); src.stop(now + dur);
+    } else if (type === 'firework') {
+      const dur = 0.4;
+      const bs = Math.floor(audioCtx.sampleRate * dur);
+      const buf = audioCtx.createBuffer(1, bs, audioCtx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < bs; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/bs, 3);
+      const src = audioCtx.createBufferSource(); src.buffer = buf;
+      const f = audioCtx.createBiquadFilter();
+      f.type = 'highpass';
+      f.frequency.value = 500;
+      const g = audioCtx.createGain();
+      g.gain.value = vol * 0.5;
+      g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+      src.connect(f).connect(g).connect(audioCtx.destination);
+      src.start(now);
+    } else if (type === 'zap') {
+      const osc = audioCtx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(800, now);
+      osc.frequency.exponentialRampToValueAtTime(200, now + 0.1);
+      const g = audioCtx.createGain();
+      g.gain.value = vol * 0.2;
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      osc.connect(g).connect(audioCtx.destination);
+      osc.start(now); osc.stop(now + 0.1);
+    }
+  } catch(e) {}
+}
+
+/* ═══════════ PARTICLES ═══════════ */
+const particles = [];
+function spawnParticles(gx, gy, count, color, speed) {
+  for (let k = 0; k < count; k++) {
+    const a = Math.random() * Math.PI * 2;
+    const s = Math.random() * speed;
+    particles.push({
+      x: gx + 0.5, y: gy + 0.5,
+      vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+      life: 20 + Math.floor(Math.random() * 25),
+      maxLife: 45,
+      color, size: 1 + Math.random() * 1.2
+    });
+  }
+  if (particles.length > 600) particles.splice(0, particles.length - 600);
+}
+
+/* ═══════════ ALLOCATION ═══════════ */
+function allocate(nw, nh) {
+  const oldCells = cells, oldW = W, oldH = H;
+  const oldOwner = trumpOwner;
+  W = nw; H = nh; N = W * H;
+  chunkCols = Math.ceil(W / CHUNK); chunkRows = Math.ceil(H / CHUNK);
+  chunkCount = chunkCols * chunkRows;
+  cells = new Uint16Array(N);
+  temp = new Float32Array(N);
+  life = new Uint16Array(N);
+  cvar = new Uint8Array(N);
+  moved = new Uint8Array(N);
+  bg = new Uint32Array(N);
+  trumpOwner = new Uint16Array(N);
+  active = new Uint8Array(chunkCount);
+  nextActive = new Uint8Array(chunkCount);
+  for (let i = 0; i < N; i++) {
+    temp[i] = AMBIENT;
+    cvar[i] = (Math.random()*8)|0;
+    const n = (Math.random()*9)|0;
+    bg[i] = rgb(8+n, 9+n, 14+n);
+  }
+  offCanvas.width = W; offCanvas.height = H;
+  glowCanvas.width = W; glowCanvas.height = H;
+  imgData = offCtx.createImageData(W, H);
+  buf32 = new Uint32Array(imgData.data.buffer);
+  glowData = glowCtx.createImageData(W, H);
+  glow32 = new Uint32Array(glowData.data.buffer);
+  if (oldCells) {
+    const cw = Math.min(oldW, W), ch = Math.min(oldH, H);
+    for (let y = 0; y < ch; y++) {
+      const src = y * oldW, dst = y * W;
+      for (let x = 0; x < cw; x++) {
+        cells[dst+x] = oldCells[src+x];
+        if (oldOwner) trumpOwner[dst+x] = oldOwner[src+x];
+      }
+    }
+  }
+  markAllActive();
+}
+function resize() {
+  const r = canvas.getBoundingClientRect();
+  const nw = Math.max(8, Math.floor(r.width/PIXEL));
+  const nh = Math.max(8, Math.floor(r.height/PIXEL));
+  canvas.width = Math.max(8, Math.floor(r.width));
+  canvas.height = Math.max(8, Math.floor(r.height));
+  if (nw !== W || nh !== H) allocate(nw, nh);
+  ctx.imageSmoothingEnabled = false;
+  clampView();
+}
+function clampView() {
+  const vw = canvas.width/(PIXEL*viewZoom), vh = canvas.height/(PIXEL*viewZoom);
+  if (vw >= W) viewPanX = (W - vw)/2; else viewPanX = Math.max(0, Math.min(W - vw, viewPanX));
+  if (vh >= H) viewPanY = (H - vh)/2; else viewPanY = Math.max(0, Math.min(H - vh, viewPanY));
+}
+function setZoom(nz, px, py) {
+  nz = Math.max(1, Math.min(8, nz));
+  const r = canvas.getBoundingClientRect();
+  px = px ?? r.width/2; py = py ?? r.height/2;
+  const oldS = PIXEL*viewZoom;
+  const wx = viewPanX + px/oldS, wy = viewPanY + py/oldS;
+  viewZoom = nz;
+  const newS = PIXEL*viewZoom;
+  viewPanX = wx - px/newS; viewPanY = wy - py/newS;
+  clampView();
+}
+function layout() {
+  const hud = document.getElementById('bottomHud');
+  const bh = hud ? hud.getBoundingClientRect().height : 56;
+  document.documentElement.style.setProperty('--bottom-h', bh + 'px');
+  resize();
+}
+
+/* ═══════════ CHUNKS ═══════════ */
+function dirty(x, y) {
+  if (x < 0 || y < 0 || x >= W || y >= H) return;
+  nextActive[(y>>CHUNK_SHIFT)*chunkCols + (x>>CHUNK_SHIFT)] = 1;
+}
+function markAllActive() { active.fill(1); nextActive.fill(1); }
+
+/* ═══════════ CELL OPS ═══════════ */
+function setCell(i, elem, opts) {
+  cells[i] = elem;
+  cvar[i] = (Math.random()*8)|0;
+  if (opts && opts.life !== undefined) life[i] = opts.life;
+  else if (elem === FIRE) life[i] = 40 + ((Math.random()*50)|0);
+  else if (elem === SMOKE) life[i] = 120 + ((Math.random()*120)|0);
+  else if (elem === STEAM) life[i] = 200 + ((Math.random()*200)|0);
+  else if (elem === SPARK) life[i] = 20 + ((Math.random()*25)|0);
+  else life[i] = 0;
+  if (opts && opts.temp !== undefined) temp[i] = opts.temp;
+  else if (elem === LAVA) temp[i] = 1200;
+  else if (elem === MAGMA) temp[i] = 1600;
+  else if (elem === MOLTEN) temp[i] = 1550;
+  else if (elem === PLASMA) temp[i] = 3000;
+  else if (elem === FIRE) temp[i] = 800;
+  else if (elem === ICE || elem === SNOW || elem === LIN) temp[i] = -20;
+  else temp[i] = AMBIENT;
+}
+function moveTo(x1,y1,x2,y2) {
+  const i = y1*W+x1, j = y2*W+x2;
+  let t;
+  t = cells[i]; cells[i] = cells[j]; cells[j] = t;
+  t = temp[i]; temp[i] = temp[j]; temp[j] = t;
+  t = life[i]; life[i] = life[j]; life[j] = t;
+  t = cvar[i]; cvar[i] = cvar[j]; cvar[j] = t;
+  moved[i] = 1; moved[j] = 1;
+  dirty(x1,y1); dirty(x2,y2);
+}
+
+/* ═══════════ MOVEMENT ═══════════ */
+function canFall(e, target) {
+  if (target === EMPTY) return true;
+  const te = ELEMENTS[target];
+  if (te.type === 'static' || te.type === 'powder') return false;
+  return ELEMENTS[e].density > te.density;
+}
+function canRise(e, target) {
+  if (target === EMPTY) return true;
+  const te = ELEMENTS[target];
+  if (te.type === 'static' || te.type === 'powder') return false;
+  return ELEMENTS[e].density < te.density;
+}
+function tryDown(x, y, e) {
+  if (y+1 >= H) return false;
+  if (canFall(e, cells[(y+1)*W+x])) { moveTo(x,y,x,y+1); return true; }
+  return false;
+}
+function tryDiagDown(x, y, e, dir) {
+  const nx = x + dir;
+  if (nx < 0 || nx >= W || y+1 >= H) return false;
+  if (canFall(e, cells[(y+1)*W+nx])) { moveTo(x,y,nx,y+1); return true; }
+  return false;
+}
+function movePowder(x, y, e) {
+  if (tryDown(x,y,e)) return;
+  const d = Math.random() < 0.5 ? 1 : -1;
+  if (tryDiagDown(x,y,e,d)) return;
+  tryDiagDown(x,y,e,-d);
+}
+function flowHorizontal(x, y, e, disp) {
+  if (disp <= 0) return false;
+  const dir = Math.random() < 0.5 ? -1 : 1;
+  let steps = 0;
+  while (steps < disp) {
+    const nx = x + dir*(steps+1);
+    if (nx < 0 || nx >= W) break;
+    if (!canFall(e, cells[y*W+nx])) break;
+    steps++;
+  }
+  if (steps > 0) { moveTo(x,y,x+dir*steps,y); return true; }
+  return false;
+}
+function moveLiquid(x, y, e, disp) {
+  if (tryDown(x,y,e)) return;
+  const d = Math.random() < 0.5 ? 1 : -1;
+  if (tryDiagDown(x,y,e,d)) return;
+  if (tryDiagDown(x,y,e,-d)) return;
+  flowHorizontal(x,y,e,disp);
+}
+function moveGas(x, y, e) {
+  if (y > 0) {
+    if (canRise(e, cells[(y-1)*W+x])) { moveTo(x,y,x,y-1); return; }
+    const d = Math.random() < 0.5 ? 1 : -1;
+    if (x+d >= 0 && x+d < W && canRise(e, cells[(y-1)*W+x+d])) { moveTo(x,y,x+d,y-1); return; }
+    if (x-d >= 0 && x-d < W && canRise(e, cells[(y-1)*W+x-d])) { moveTo(x,y,x-d,y-1); return; }
+  }
+  const hx = x + (Math.random() < 0.5 ? -1 : 1);
+  if (hx >= 0 && hx < W && canRise(e, cells[y*W+hx])) moveTo(x,y,hx,y);
+}
+
+/* ═══════════ HEAT ═══════════ */
+const K_CONDUCT = 0.05;
+function diffuse(x, y, i) {
+  const t = temp[i];
+  let nt = t;
+  if (x > 0) { const j=i-1,d=temp[j]-t; if (d>0.5||d<-0.5) { const f=d*K_CONDUCT; nt+=f; temp[j]-=f; dirty(x-1,y);} }
+  if (x < W-1) { const j=i+1,d=temp[j]-t; if (d>0.5||d<-0.5) { const f=d*K_CONDUCT; nt+=f; temp[j]-=f; dirty(x+1,y);} }
+  if (y > 0) { const j=i-W,d=temp[j]-t; if (d>0.5||d<-0.5) { const f=d*K_CONDUCT; nt+=f; temp[j]-=f; dirty(x,y-1);} }
+  if (y < H-1) { const j=i+W,d=temp[j]-t; if (d>0.5||d<-0.5) { const f=d*K_CONDUCT; nt+=f; temp[j]-=f; dirty(x,y+1);} }
+  nt += (AMBIENT - nt) * 0.004;
+  temp[i] = nt;
+  dirty(x,y);
+}
+
+/* ═══════════ EXPLOSION ═══════════ */
+function explode(cx, cy, radius) {
+  const r2 = radius * radius;
+  for (let dy = -radius; dy <= radius; dy++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      const d2 = dx*dx + dy*dy;
+      if (d2 > r2) continue;
+      const x = cx+dx, y = cy+dy;
+      if (x < 0 || x >= W || y < 0 || y >= H) continue;
+      const j = y*W+x;
+      if (cells[j] === WALL) continue;
+      const f = 1 - Math.sqrt(d2)/radius;
+      dirty(x,y);
+      if (Math.random() < f*0.9) {
+        if (Math.random() < 0.55) setCell(j, FIRE, {temp:900});
+        else cells[j] = EMPTY;
+      }
+      if (temp[j] < 900*f) temp[j] = 900*f;
+    }
+  }
+  spawnParticles(cx, cy, 15, rgb(255, 180, 80), 3);
+  shakeAmount = Math.min(30, shakeAmount + radius * 1.2);
+  flashAmount = Math.min(0.7, flashAmount + 0.3);
+  playSound('explosion', Math.min(0.3, radius * 0.025));
+  markAllActive();
+}
+
+/* ═══════════ LOG ═══════════ */
+const logLines = [];
+let logDirty = false;
+function logReaction(a, b) {
+  logLines.unshift(ELEMENTS[a].name + ' + ' + ELEMENTS[b].name);
+  if (logLines.length > 5) logLines.pop();
+  logDirty = true;
+}
+
+/* ═══════════ REACTION CHECK ═══════════ */
+const N4 = [[0,-1],[0,1],[-1,0],[1,0]];
+function checkReaction(x, y, i) {
+  const e = cells[i];
+  if (e === EMPTY) return false;
+  const m = RX_MAP.get(e);
+  if (!m) return false;
+  for (let k = 0; k < 4; k++) {
+    const nx = x + N4[k][0], ny = y + N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    const target = cells[j];
+    if (target === EMPTY) continue;
+    const opt = m.get(target);
+    if (!opt) continue;
+    if (Math.random() > (opt.chance ?? 1)) continue;
+    logReaction(e, target);
+    if (opt.to !== undefined) setCell(i, opt.to);
+    else cells[i] = EMPTY;
+    if (opt.other !== undefined) setCell(j, opt.other);
+    if (opt.heat) temp[i] += opt.heat;
+    if (opt.explode) explode(nx, ny, opt.explode);
+    dirty(x,y); dirty(nx,ny);
+    return true;
+  }
+  return false;
+}
+
+/* ═══════════ SPECIAL HANDLERS ═══════════ */
+function updateFire(x, y, i) {
+  for (let k = 0; k < 4; k++) {
+    const nx = x+N4[k][0], ny = y+N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    const t = cells[j];
+    if (t === EMPTY) continue;
+    if (t === WATER || t === SALTWATER) {
+      setCell(j, STEAM, {life:300, temp:130});
+      cells[i] = EMPTY; dirty(x,y); dirty(nx,ny); return;
+    }
+    if (t === ICE || t === SNOW) { setCell(j, WATER, {temp:10}); dirty(nx,ny); continue; }
+    const te = ELEMENTS[t];
+    if (te.flammable > 0 && Math.random() < te.flammable) {
+      if (te.explosion) { explode(nx, ny, te.explosion); return; }
+      setCell(j, FIRE, {temp:800});
+      dirty(nx,ny);
+    }
+  }
+  if (--life[i] <= 0) { setCell(i, SMOKE); dirty(x,y); return; }
+  temp[i] = 800;
+  moveGas(x,y,FIRE);
+}
+function updateLava(x, y, i) {
+  temp[i] = Math.max(temp[i], 1100);
+  for (let k = 0; k < 4; k++) {
+    const nx = x+N4[k][0], ny = y+N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    const t = cells[j];
+    if (t === EMPTY) { temp[j] = Math.max(temp[j], 300); dirty(nx,ny); continue; }
+    if (t === WATER || t === SALTWATER) {
+      setCell(j, STEAM, {life:320, temp:160});
+      setCell(i, Math.random() < 0.35 ? OBSIDIAN : STONE, {temp:400});
+      dirty(nx,ny); dirty(x,y); return;
+    }
+    if (t === ICE || t === SNOW) { setCell(j, WATER, {temp:30}); dirty(nx,ny); continue; }
+    const te = ELEMENTS[t];
+    if (te.flammable > 0 && Math.random() < te.flammable*1.6) { setCell(j, FIRE, {temp:800}); dirty(nx,ny); continue; }
+    if (temp[j] < 400) { temp[j] = 400; dirty(nx,ny); }
+  }
+  moveLiquid(x,y,LAVA,1);
+}
+function updateMagma(x, y, i) {
+  temp[i] = Math.max(temp[i], 1600);
+  for (let k = 0; k < 4; k++) {
+    const nx = x+N4[k][0], ny = y+N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    const t = cells[j];
+    if (t === EMPTY) { temp[j] = Math.max(temp[j], 600); dirty(nx,ny); continue; }
+    if (t === WATER || t === SALTWATER) {
+      setCell(j, STEAM, {life:400, temp:200});
+      setCell(i, OBSIDIAN, {temp:400});
+      dirty(nx,ny); dirty(x,y); return;
+    }
+    if (t === STONE) { setCell(j, LAVA, {temp:1200}); dirty(nx,ny); continue; }
+    if (temp[j] < 800) { temp[j] = 800; dirty(nx,ny); }
+  }
+  moveLiquid(x,y,MAGMA,1);
+}
+function updatePlasma(x, y, i) {
+  temp[i] = 3000;
+  for (let k = 0; k < 4; k++) {
+    const nx = x+N4[k][0], ny = y+N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    if (temp[j] < 2000) temp[j] = 2000;
+    dirty(nx,ny);
+    if (cells[j] !== WALL && Math.random() < 0.05) { setCell(j, FIRE, {temp:1200}); dirty(nx,ny); }
+  }
+  if (Math.random() < 0.05) { cells[i] = EMPTY; dirty(x,y); return; }
+  moveGas(x,y,PLASMA);
+}
+function updateAcid(x, y, i) {
+  for (let k = 0; k < 4; k++) {
+    const nx = x+N4[k][0], ny = y+N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    const t = cells[j];
+    if (t === EMPTY || t === ACID || t === WALL || t === GLASS || t === OBSIDIAN || t === ACID_VAPOR) continue;
+    if (Math.random() < 0.06) {
+      if (t === METAL || t === IRON || t === COPPER || t === ZINC || t === ALUMINUM || t === STEEL) setCell(j, HYDROGEN, {life:100});
+      else if (Math.random() < 0.4) setCell(j, SMOKE, {life:120, temp:80});
+      else cells[j] = EMPTY;
+      dirty(nx,ny);
+      if (Math.random() < 0.35) { cells[i] = EMPTY; dirty(x,y); return; }
+    }
+  }
+  moveLiquid(x,y,ACID,3);
+}
+function updateAcidVapor(x, y, i) {
+  for (let k = 0; k < 4; k++) {
+    const nx = x+N4[k][0], ny = y+N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    if (cells[j] !== EMPTY && cells[j] !== ACID_VAPOR && cells[j] !== WALL && Math.random() < 0.04) { cells[j] = EMPTY; dirty(nx,ny); }
+  }
+  moveGas(x,y,ACID_VAPOR);
+}
+function updateSalt(x, y, i) {
+  for (let k = 0; k < 4; k++) {
+    const nx = x+N4[k][0], ny = y+N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    if (cells[j] === WATER) { setCell(j, SALTWATER, {temp:temp[j]}); cells[i] = EMPTY; dirty(nx,ny); dirty(x,y); return; }
+  }
+  movePowder(x,y,SALT);
+}
+function updateSaltwater(x, y, i) {
+  if (temp[i] >= 100) {
+    setCell(i, STEAM, {life:300, temp:110});
+    dirty(x,y);
+    for (let k = 0; k < 4; k++) {
+      const nx = x+N4[k][0], ny = y+N4[k][1];
+      if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+      const j = ny*W+nx;
+      if (cells[j] === EMPTY) { setCell(j, SALT, {temp:80}); dirty(nx,ny); break; }
+    }
+    return;
+  }
+  if (temp[i] <= 0) { setCell(i, ICE, {temp:-1}); dirty(x,y); return; }
+  moveLiquid(x,y,SALTWATER,3);
+}
+function updateSpark(x, y, i) {
+  if (--life[i] <= 0) { cells[i] = EMPTY; dirty(x,y); return; }
+  temp[i] = 300;
+  for (let k = 0; k < 4; k++) {
+    const nx = x+N4[k][0], ny = y+N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    if (cells[j] === WIRE) { setCell(j, SPARK, {life:life[i], temp:300}); cells[i] = EMPTY; dirty(nx,ny); dirty(x,y); return; }
+  }
+  moveGas(x,y,SPARK);
+}
+function updateBattery(x, y, i) {
+  if (Math.random() < 0.02) {
+    for (let k = 0; k < 4; k++) {
+      const nx = x+N4[k][0], ny = y+N4[k][1];
+      if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+      const j = ny*W+nx;
+      const t = cells[j];
+      if ((t === WIRE || t === EMPTY || t === METAL) && Math.random() < 0.6) { setCell(j, SPARK, {life:30, temp:300}); dirty(nx,ny); playSound('zap'); return; }
+    }
+  }
+}
+function updateCloner(x, y, i) {
+  let source = 0;
+  for (let k = 0; k < 4; k++) {
+    const nx = x+N4[k][0], ny = y+N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const t = cells[ny*W+nx];
+    if (t !== EMPTY && t !== CLONER && t !== VOID && t !== WALL && t !== SPOUT && t !== BATTERY && t !== WIRE && t !== HEATER && t !== COOLER) { source = t; break; }
+  }
+  if (!source || Math.random() > 0.15) return;
+  for (let k = 0; k < 4; k++) {
+    const nx = x+N4[k][0], ny = y+N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    if (cells[j] === EMPTY) { setCell(j, source); dirty(nx,ny); return; }
+  }
+}
+function updateVoid(x, y, i) {
+  for (let k = 0; k < 4; k++) {
+    const nx = x+N4[k][0], ny = y+N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    const t = cells[j];
+    if (t !== EMPTY && t !== VOID && t !== WALL) { cells[j] = EMPTY; dirty(nx,ny); }
+  }
+}
+function updateSpout(x, y, i) {
+  if (y > 0) { const j = (y-1)*W+x; if (cells[j] === EMPTY) { setCell(j, WATER); dirty(x,y-1); } }
+}
+function updateHeater(x, y, i) {
+  temp[i] = 1500;
+  for (let k = 0; k < 4; k++) {
+    const nx = x+N4[k][0], ny = y+N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    if (temp[j] < 1000) { temp[j] = 1000; dirty(nx,ny); }
+  }
+}
+function updateCooler(x, y, i) {
+  temp[i] = -200;
+  for (let k = 0; k < 4; k++) {
+    const nx = x+N4[k][0], ny = y+N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    if (temp[j] > -100) { temp[j] = -100; dirty(nx,ny); }
+  }
+}
+function updateAntigrav(x, y, i) {
+  for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
+    if (dx*dx+dy*dy > 9) continue;
+    const nx = x+dx, ny = y+dy;
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    const t = cells[j];
+    if (t === EMPTY) continue;
+    if (ELEMENTS[t].type === 'static') continue;
+    if (ny > 0 && cells[(ny-1)*W+nx] === EMPTY) moveTo(nx,ny,nx,ny-1);
+  }
+}
+function updatePlant(x, y, i) {
+  if (Math.random() < 0.035) {
+    for (let k = 0; k < 4; k++) {
+      const nx = x+N4[k][0], ny = y+N4[k][1];
+      if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+      const j = ny*W+nx;
+      if (cells[j] === WATER) { setCell(j, PLANT); dirty(nx,ny); return; }
+    }
+  }
+}
+function updateFungus(x, y, i) {
+  if (Math.random() < 0.02) {
+    for (let k = 0; k < 4; k++) {
+      const nx = x+N4[k][0], ny = y+N4[k][1];
+      if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+      const j = ny*W+nx;
+      const t = cells[j];
+      if ((t === PLANT || t === WOOD || t === DIRT || t === HUMAN) && Math.random() < 0.3) { setCell(j, FUNGUS); dirty(nx,ny); }
+    }
+  }
+}
+function updateSeed(x, y, i) {
+  if (y < H-1 && cells[(y+1)*W+x] === DIRT && Math.random() < 0.006) { setCell(i, PLANT); dirty(x,y); return; }
+  movePowder(x,y,SEED);
+}
+function updatePoison(x, y, i) {
+  for (let k = 0; k < 4; k++) {
+    const nx = x+N4[k][0], ny = y+N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    const t = cells[j];
+    if (t === BLOOD && Math.random() < 0.5) { setCell(j, SLIME, {temp:temp[j]}); dirty(nx,ny); if (Math.random() < 0.3) { cells[i] = EMPTY; dirty(x,y); return; } }
+    if (t === HUMAN && Math.random() < 0.05) { setCell(j, SLIME); dirty(nx,ny); }
+  }
+  moveLiquid(x,y,POISON,3);
+}
+function updateMagnesium(x, y, i) {
+  if (temp[i] > 400) {
+    temp[i] = 1200;
+    for (let k = 0; k < 4; k++) {
+      const nx = x+N4[k][0], ny = y+N4[k][1];
+      if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+      if (temp[ny*W+nx] < 800) { temp[ny*W+nx] = 800; dirty(nx,ny); }
+    }
+    if (--life[i] <= 0) { setCell(i, ASH); dirty(x,y); return; }
+    movePowder(x,y,MAGNESIUM);
+  } else movePowder(x,y,MAGNESIUM);
+}
+function updateLiquidNitrogen(x, y, i) {
+  temp[i] = -196;
+  for (let k = 0; k < 4; k++) {
+    const nx = x+N4[k][0], ny = y+N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    if (temp[j] > -50) { temp[j] = -50; dirty(nx,ny); }
+    if (cells[j] === FIRE) { setCell(j, SMOKE, {temp:-50}); dirty(nx,ny); }
+  }
+  moveLiquid(x,y,LIN,3);
+}
+function updateFirework(x, y, i) {
+  if (temp[i] > 200 && Math.random() < 0.5) {
+    const cx = x, cy = y;
+    for (let k = 0; k < 40; k++) {
+      const a = Math.random() * Math.PI * 2;
+      const rad = 3 + Math.random() * 5;
+      const px = Math.round(cx + Math.cos(a) * rad);
+      const py = Math.round(cy + Math.sin(a) * rad);
+      if (px < 0 || px >= W || py < 0 || py >= H) continue;
+      const j = py*W+px;
+      if (cells[j] === EMPTY) {
+        setCell(j, FIRE, {temp:900});
+        cvar[j] = (Math.random()*8)|0;
+        dirty(px, py);
+      }
+    }
+    explode(cx, cy, 3);
+    spawnParticles(cx, cy, 25, rgb(255, 200, 100), 3);
+    playSound('firework');
+    cells[i] = EMPTY;
+    dirty(x, y);
+  }
+}
+function updateBlackhole(x, y, i) {
+  for (let dy = -8; dy <= 8; dy++) for (let dx = -8; dx <= 8; dx++) {
+    if (dx*dx+dy*dy > 64 || (dx === 0 && dy === 0)) continue;
+    const nx = x+dx, ny = y+dy;
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    const t = cells[j];
+    if (t === EMPTY || t === WALL || t === BLACKHOLE) continue;
+    if (Math.random() < 0.15) {
+      const dirX = Math.sign(-dx), dirY = Math.sign(-dy);
+      const tx = nx + dirX, ty = ny + dirY;
+      if (tx >= 0 && tx < W && ty >= 0 && ty < H) {
+        const tj = ty*W+tx;
+        if (cells[tj] === EMPTY) moveTo(nx, ny, tx, ty);
+        else if (Math.random() < 0.3) { cells[j] = EMPTY; dirty(nx, ny); }
+      }
+    }
+  }
+}
+function updatePortal(x, y, i) {
+  if (Math.random() < 0.02) {
+    let otherPortal = null;
+    for (let k = 0; k < 30; k++) {
+      const px = Math.floor(Math.random() * W);
+      const py = Math.floor(Math.random() * H);
+      if (cells[py*W+px] === PORTAL) { otherPortal = [px, py]; break; }
+    }
+    if (!otherPortal) return;
+    for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
+      const nx = x+dx, ny = y+dy;
+      if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+      const j = ny*W+nx;
+      const t = cells[j];
+      if (t === EMPTY || t === WALL || t === PORTAL) continue;
+      if (Math.random() < 0.3) {
+        const tx = otherPortal[0] + dx, ty = otherPortal[1] + dy;
+        if (tx >= 0 && tx < W && ty >= 0 && ty < H) {
+          const tj = ty*W+tx;
+          if (cells[tj] === EMPTY) moveTo(nx, ny, tx, ty);
+        }
+      }
+    }
+  }
+}
+function updateBouncy(x, y, i) {
+  if (y+1 < H) {
+    const below = cells[(y+1)*W+x];
+    if (below === EMPTY) { moveTo(x, y, x, y+1); return; }
+    if (ELEMENTS[below].type === 'static' || ELEMENTS[below].type === 'powder') {
+      if (Math.random() < 0.6) {
+        if (y > 0 && cells[(y-1)*W+x] === EMPTY) { moveTo(x, y, x, y-1); return; }
+      }
+    }
+  }
+  const dir = Math.random() < 0.5 ? -1 : 1;
+  const nx = x + dir;
+  if (nx >= 0 && nx < W && cells[y*W+nx] === EMPTY) { moveTo(x, y, nx, y); return; }
+  if (y > 0 && cells[(y-1)*W+x] === EMPTY && Math.random() < 0.4) moveTo(x, y, x, y-1);
+}
+function updateTrump(x, y, i) {
+  if (temp[i] > 300 && Math.random() < 0.05) {
+    setCell(i, FIRE, {temp:800});
+    dirty(x, y);
+  }
+}
+
+/* ═══════════ TRUMP PAINT + CPU + ANIMATIONS ═══════════ */
+function paintTrump(gx, gy) {
+  const unitId = nextTrumpId++;
+  if (nextTrumpId > 65000) nextTrumpId = 1;
+  const startY = gy - ((TRUMP_PATTERN.length / 2) | 0);
+  const startX = gx - 22;
+
+  const unit = {
+    id: unitId,
+    baseX: startX, baseY: startY,
+    dir: Math.random() < 0.5 ? 1 : -1,
+    cells: new Set(),
+    state: 'walk',
+    stateTimer: 120,
+    animFrame: 0,
+    walkTimer: 0,
+    walkPhase: 0,
+    jumpTimer: 0,
+    blinkTimer: 60 + Math.floor(Math.random() * 60),
+    blinkActive: false,
+    mouthOpen: false,
+    mouthTimer: 0,
+    renderHeadDY: 0, renderBodyDY: 0, renderTieDX: 0,
+    renderJumpDY: 0, renderDanceDX: 0, renderDanceDY: 0,
+    wavePhase: 0,
+    phantoms: [],
+    sparkleTimer: 0,
+  };
+
+  for (let row = 0; row < TRUMP_PATTERN.length; row++) {
+    const line = TRUMP_PATTERN[row];
+    for (let col = 0; col < line.length; col++) {
+      const ch = line[col];
+      if (ch === ' ') continue;
+      const x = startX + col, y = startY + row;
+      if (x < 0 || x >= W || y < 0 || y >= H) continue;
+      const i = y * W + x;
+      cells[i] = TRUMP;
+      if (ch === 'H') cvar[i] = HAIR_SHADES[(Math.random() * 4) | 0];
+      else if (ch === 'S') cvar[i] = 0;
+      else if (ch === 'T') cvar[i] = 3;
+      else cvar[i] = 2;
+      life[i] = 0; temp[i] = AMBIENT;
+      if (trumpOwner) trumpOwner[i] = unitId;
+      unit.cells.add(i);
+      dirty(x, y);
+    }
+  }
+  trumpUnits.push(unit);
+}
+
+function moveTrumpGroup(unit, dx, dy) {
+  const list = [];
+  for (const i of unit.cells) {
+    if (cells[i] === TRUMP && trumpOwner[i] === unit.id) {
+      const x = i % W, y = (i/W)|0;
+      list.push({x, y, cv: cvar[i], tp: temp[i]});
+    }
+  }
+  if (list.length === 0) return false;
+  for (const {x, y} of list) {
+    const i = y*W + x;
+    cells[i] = EMPTY;
+    trumpOwner[i] = 0;
+    moved[i] = 1;
+    dirty(x, y);
+  }
+  const newSet = new Set();
+  for (const {x, y, cv, tp} of list) {
+    const nx = x + dx, ny = y + dy;
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W + nx;
+    cells[j] = TRUMP;
+    cvar[j] = cv;
+    temp[j] = tp;
+    trumpOwner[j] = unit.id;
+    moved[j] = 1;
+    newSet.add(j);
+    dirty(nx, ny);
+  }
+  unit.cells = newSet;
+  return true;
+}
+
+function updateTrumpUnits() {
+  for (let u = trumpUnits.length - 1; u >= 0; u--) {
+    const unit = trumpUnits[u];
+    unit.animFrame++;
+
+    let cellCount = 0, minX = W, maxX = -1, minY = H, maxY = -1;
+    for (const i of unit.cells) {
+      if (cells[i] === TRUMP && trumpOwner[i] === unit.id) {
+        cellCount++;
+        const x = i % W, y = (i/W)|0;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+    if (cellCount < 50) { trumpUnits.splice(u, 1); continue; }
+
+    unit.baseX = minX;
+    unit.baseY = minY;
+
+    if (unit.stateTimer > 0) unit.stateTimer--;
+    else {
+      const r = Math.random();
+      let next;
+      if (r < 0.30) next = 'walk';
+      else if (r < 0.45) next = 'idle';
+      else if (r < 0.60) next = 'dance';
+      else if (r < 0.72) next = 'talk';
+      else if (r < 0.82) next = 'wave';
+      else if (r < 0.92) next = 'jump';
+      else next = 'celebrate';
+
+      unit.state = next;
+      if (next === 'walk') unit.stateTimer = 120 + ((Math.random()*100)|0);
+      else if (next === 'idle') unit.stateTimer = 60 + ((Math.random()*60)|0);
+      else if (next === 'dance') unit.stateTimer = 100 + ((Math.random()*80)|0);
+      else if (next === 'talk') unit.stateTimer = 80 + ((Math.random()*60)|0);
+      else if (next === 'wave') unit.stateTimer = 45 + ((Math.random()*30)|0);
+      else if (next === 'jump') { unit.stateTimer = 30 + ((Math.random()*20)|0); unit.jumpTimer = 0; }
+      else if (next === 'celebrate') {
+        unit.stateTimer = 100 + ((Math.random()*40)|0);
+        const cx = unit.baseX + 11, cy = unit.baseY + 5;
+        for (let k = 0; k < 40; k++) {
+          const col = TRUMP_COLORS[(Math.random()*7)|0];
+          spawnParticles(cx, cy, 1, col, 3);
+        }
+        playSound('firework');
+      }
+    }
+
+    unit.blinkTimer--;
+    if (unit.blinkTimer <= 0) {
+      unit.blinkActive = true;
+      if (unit.blinkTimer < -4) {
+        unit.blinkActive = false;
+        unit.blinkTimer = 60 + ((Math.random()*90)|0);
+      }
+    }
+
+    if (unit.state === 'talk') {
+      unit.mouthTimer++;
+      unit.mouthOpen = (unit.mouthTimer % 8) < 4;
+    } else { unit.mouthOpen = false; unit.mouthTimer = 0; }
+
+    const f = unit.animFrame;
+
+    if (unit.state === 'walk') {
+      unit.renderHeadDY = (f % 8 < 4) ? -1 : 0;
+      unit.walkPhase = (f >> 2) & 3;
+      unit.renderTieDX = (f % 6 < 3) ? 1 : -1;
+      unit.renderDanceDX = 0; unit.renderDanceDY = 0; unit.renderJumpDY = 0;
+    } else if (unit.state === 'idle') {
+      unit.renderHeadDY = Math.round(Math.sin(f * 0.05) * 1.2);
+      unit.renderTieDX = 0; unit.renderDanceDX = 0; unit.renderDanceDY = 0; unit.renderJumpDY = 0;
+    } else if (unit.state === 'dance') {
+      unit.renderDanceDX = Math.round(Math.sin(f * 0.35) * 2);
+      unit.renderDanceDY = Math.round(Math.abs(Math.sin(f * 0.35)) * -2);
+      unit.renderHeadDY = Math.round(Math.sin(f * 0.7) * 1);
+      unit.renderTieDX = Math.round(Math.sin(f * 0.5) * 2);
+      unit.renderJumpDY = 0;
+    } else if (unit.state === 'jump') {
+      unit.jumpTimer++;
+      const jt = unit.jumpTimer;
+      if (jt < 15) unit.renderJumpDY = -Math.round(Math.sin(jt / 15 * Math.PI) * 6);
+      else unit.renderJumpDY = 0;
+      unit.renderHeadDY = 0; unit.renderTieDX = 0; unit.renderDanceDX = 0; unit.renderDanceDY = 0;
+    } else if (unit.state === 'celebrate') {
+      unit.renderDanceDX = Math.round(Math.sin(f * 0.4) * 1);
+      unit.renderHeadDY = Math.round(Math.sin(f * 0.5) * 1);
+      unit.renderTieDX = 0; unit.renderDanceDY = 0; unit.renderJumpDY = 0;
+    } else if (unit.state === 'wave') {
+      unit.wavePhase++;
+      unit.renderHeadDY = 0; unit.renderTieDX = 0; unit.renderDanceDX = 0; unit.renderDanceDY = 0; unit.renderJumpDY = 0;
+    } else {
+      unit.renderHeadDY = 0; unit.renderDanceDX = 0; unit.renderDanceDY = 0;
+      unit.renderTieDX = 0; unit.renderJumpDY = 0;
+    }
+
+    // Hair shimmer — every 3 ticks
+    if (f % 3 === 0) {
+      const arr = Array.from(unit.cells);
+      for (let tries = 0; tries < 3 && arr.length; tries++) {
+        const i = arr[(Math.random() * arr.length) | 0];
+        if (cells[i] === TRUMP && trumpOwner[i] === unit.id) {
+          const cv = cvar[i];
+          if (cv === 1 || cv === 5 || cv === 6 || cv === 7) {
+            cvar[i] = HAIR_SHADES[(Math.random() * 4) | 0];
+            dirty(i % W, (i/W)|0);
+          }
+        }
+      }
+    }
+
+    if (unit.state !== 'jump' && Math.random() < 0.02) {
+      spawnParticles(unit.baseX + 11, unit.baseY + 1, 1, TRUMP_COLORS[9], 1);
+    }
+
+    unit.phantoms.length = 0;
+    if (unit.state === 'wave') {
+      const waveUp = (unit.wavePhase >> 2) % 2 === 0;
+      const armX = 21 + (unit.dir > 0 ? 1 : 0);
+      const armY = 14 - (waveUp ? 2 : 0);
+      unit.phantoms.push({lx: armX, ly: armY, cv: 0});
+      unit.phantoms.push({lx: armX, ly: armY + 1, cv: 0});
+      if (waveUp) unit.phantoms.push({lx: armX + 1, ly: armY - 1, cv: 0});
+    }
+    if (unit.state === 'talk' && unit.mouthOpen) {
+      const bx = 11, by = -3;
+      unit.phantoms.push({lx: bx, ly: by, cv: 8});
+      unit.phantoms.push({lx: bx, ly: by + 1, cv: 8});
+    }
+    if (unit.state === 'celebrate') {
+      unit.phantoms.push({lx: 4, ly: 11, cv: 0});
+      unit.phantoms.push({lx: 4, ly: 10, cv: 0});
+      unit.phantoms.push({lx: 18, ly: 11, cv: 0});
+      unit.phantoms.push({lx: 18, ly: 10, cv: 0});
+    }
+
+    let hasGround = false;
+    const belowY = maxY + 1;
+    if (belowY < H) {
+      for (let x = minX; x <= maxX; x++) {
+        const c = cells[belowY*W + x];
+        if (c !== EMPTY) {
+          const ce = ELEMENTS[c];
+          if (ce && (ce.type === 'static' || ce.type === 'powder')) { hasGround = true; break; }
+        }
+      }
+    }
+    if (!hasGround) {
+      if (belowY < H) {
+        moveTrumpGroup(unit, 0, 1);
+        // Re-scan bounding box after move
+        minY = W; maxY = -1;
+        for (const i of unit.cells) {
+          if (cells[i] === TRUMP && trumpOwner[i] === unit.id) {
+            const y = (i/W)|0;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+        unit.baseY = minY;
+      }
+      continue;
+    }
+
+    if (unit.state !== 'walk') continue;
+
+    unit.walkTimer++;
+    if (unit.walkTimer < 3) continue;
+    unit.walkTimer = 0;
+
+    const dir = unit.dir;
+    let canWalk = true;
+    for (let y = minY; y <= maxY; y++) {
+      const checkX = dir > 0 ? maxX + 1 : minX - 1;
+      if (checkX < 0 || checkX >= W) { canWalk = false; break; }
+      const c = cells[y*W + checkX];
+      if (c !== EMPTY) {
+        if (c === TRUMP && trumpOwner[y*W + checkX] === unit.id) continue;
+        const ce = ELEMENTS[c];
+        if (ce && ce.type === 'static') { canWalk = false; break; }
+      }
+    }
+    if (canWalk && moveTrumpGroup(unit, dir, 0)) {
+      unit.baseX += dir;
+    } else {
+      unit.dir = -unit.dir;
+    }
+  }
+}
+
+function computeTrumpRenderData() {
+  const offsets = new Map();
+  const phantoms = [];
+  for (const unit of trumpUnits) {
+    const ox_body = unit.renderDanceDX;
+    const oy_body = unit.renderDanceDY + unit.renderJumpDY;
+
+    for (const i of unit.cells) {
+      if (cells[i] !== TRUMP || trumpOwner[i] !== unit.id) continue;
+      const x = i % W, y = (i/W)|0;
+      const lx = x - unit.baseX, ly = y - unit.baseY;
+
+      let ox = ox_body, oy = oy_body;
+      let cvOverride = -1;
+
+      if (ly < 12) oy += unit.renderHeadDY;
+      if (ly >= 16 && ly <= 20 && lx >= 6 && lx <= 15) ox += unit.renderTieDX;
+      if (unit.blinkActive && isEyeCell(lx, ly)) cvOverride = 6;
+      if (unit.mouthOpen && isMouthCell(lx, ly)) cvOverride = 2;
+
+      if (ox !== 0 || oy !== 0 || cvOverride >= 0) {
+        offsets.set(i, {ox, oy, cvOverride});
+      }
+    }
+
+    for (const p of unit.phantoms) {
+      const px = unit.baseX + p.lx + ox_body;
+      const py = unit.baseY + p.ly + oy_body;
+      if (px < 0 || px >= W || py < 0 || py >= H) continue;
+      phantoms.push({x: px, y: py, cv: p.cv});
+    }
+  }
+  return {offsets, phantoms};
+}
+
+/* ═══════════ CREATURE HELPERS ═══════════ */
+function tryBurn(x, y, i) {
+  if (temp[i] > 280 && Math.random() < 0.05) { setCell(i, FIRE, {temp:800}); dirty(x,y); return true; }
+  return false;
+}
+function walkGround(x, y, i, e, speed) {
+  if (tryBurn(x, y, i)) return;
+  if (y+1 < H) {
+    const below = cells[(y+1)*W+x];
+    if (below === EMPTY || canFall(e, below)) { moveTo(x,y,x,y+1); return; }
+  }
+  if (Math.random() < speed) {
+    const dir = Math.random() < 0.5 ? -1 : 1;
+    const nx = x + dir;
+    if (nx >= 0 && nx < W) {
+      const target = cells[y*W+nx];
+      if (target === EMPTY || canFall(e, target)) moveTo(x,y,nx,y);
+    }
+  }
+}
+function flyCreature(x, y, i, e, speed) {
+  if (tryBurn(x, y, i)) return;
+  if (Math.random() > speed) return;
+  const dir = (Math.random()*6)|0;
+  const dx = dir === 0 ? -1 : dir === 1 ? 1 : 0;
+  const dy = dir === 2 ? -1 : dir === 3 ? 1 : 0;
+  if (dx === 0 && dy === 0) return;
+  const nx = x+dx, ny = y+dy;
+  if (nx >= 0 && nx < W && ny >= 0 && ny < H) {
+    const t = cells[ny*W+nx];
+    if (t === EMPTY || canRise(e, t)) moveTo(x,y,nx,ny);
+  }
+}
+function updateHuman(x, y, i) {
+  if (temp[i] > 250 && Math.random() < 0.10) { setCell(i, FIRE, {temp:800}); dirty(x,y); return; }
+  for (let k = 0; k < 4; k++) {
+    const nx = x+N4[k][0], ny = y+N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const t = cells[ny*W+nx];
+    if (t === ZOMBIE && Math.random() < 0.20) { setCell(i, ZOMBIE); dirty(x,y); return; }
+    if ((t === LAVA || t === MAGMA) && Math.random() < 0.35) { setCell(i, FIRE, {temp:900}); dirty(x,y); return; }
+    if (t === ACID && Math.random() < 0.05) { setCell(i, SLIME); dirty(x,y); return; }
+  }
+  walkGround(x,y,i,HUMAN,0.30);
+}
+function updateZombie(x, y, i) {
+  if (tryBurn(x, y, i)) return;
+  for (let k = 0; k < 4; k++) {
+    const nx = x+N4[k][0], ny = y+N4[k][1];
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const j = ny*W+nx;
+    if (cells[j] === HUMAN && Math.random() < 0.25) { setCell(j, ZOMBIE); dirty(nx,ny); }
+  }
+  walkGround(x,y,i,ZOMBIE,0.25);
+}
+function updateGhost(x, y, i) {
+  if (y > 0 && Math.random() < 0.4) {
+    const j = (y-1)*W+x;
+    if (cells[j] === EMPTY) { moveTo(x,y,x,y-1); return; }
+  }
+  if (Math.random() < 0.4) {
+    const dir = Math.random() < 0.5 ? -1 : 1;
+    const nx = x+dir;
+    if (nx >= 0 && nx < W && cells[y*W+nx] === EMPTY) moveTo(x,y,nx,y);
+  }
+}
+function updateRobot(x, y, i) {
+  if (temp[i] > 800 && Math.random() < 0.05) { setCell(i, MOLTEN, {temp:1500}); dirty(x,y); return; }
+  walkGround(x,y,i,ROBOT,0.28);
+}
+function updateFish(x, y, i) {
+  let wc = 0;
+  for (let k = 0; k < 4; k++) { const nx = x+N4[k][0], ny = y+N4[k][1]; if (nx >= 0 && nx < W && ny >= 0 && ny < H && cells[ny*W+nx] === WATER) wc++; }
+  if (wc === 0 && Math.random() < 0.05) { setCell(i, FLESH); dirty(x,y); return; }
+  if (Math.random() < 0.45) {
+    const dir = Math.random() < 0.5 ? -1 : 1;
+    const vertical = Math.random() < 0.5;
+    const nx = x + (vertical?0:dir), ny = y + (vertical?dir:0);
+    if (nx >= 0 && nx < W && ny >= 0 && ny < H) {
+      const t = cells[ny*W+nx];
+      if (t === EMPTY || t === WATER) moveTo(x,y,nx,ny);
+    }
+  }
+}
+function updateSpider(x, y, i) {
+  if (tryBurn(x, y, i)) return;
+  if (Math.random() < 0.08 && y > 0 && cells[(y-1)*W+x] === EMPTY) { moveTo(x,y,x,y-1); return; }
+  walkGround(x,y,i,SPIDER,0.4);
+}
+function updateSnake(x, y, i) {
+  if (tryBurn(x, y, i)) return;
+  if (y+1 < H) { const below = cells[(y+1)*W+x]; if (below === EMPTY || canFall(SNAKE, below)) { moveTo(x,y,x,y+1); return; } }
+  if (Math.random() < 0.5) {
+    const dir = Math.random() < 0.5 ? -1 : 1;
+    const nx = x+dir;
+    if (nx >= 0 && nx < W && cells[y*W+nx] === EMPTY) moveTo(x,y,nx,y);
+  }
+}
+function genericWalker(id, speed) {
+  return function(x, y, i) { if (tryBurn(x,y,i)) return; walkGround(x,y,i,id,speed); };
+}
+function genericFlyer(id, speed, hasLife) {
+  return function(x, y, i) {
+    if (tryBurn(x,y,i)) return;
+    if (hasLife && --life[i] <= 0) { cells[i] = EMPTY; dirty(x,y); return; }
+    flyCreature(x,y,i,id,speed);
+  };
+}
+function genericSwimmer(id, speed) {
+  return function(x, y, i) { updateFish(x, y, i); };
+}
+
+/* ═══════════ HANDLERS TABLE ═══════════ */
+const handlers = new Array(ELEMENTS.length).fill(null);
+handlers[FIRE] = updateFire;
+handlers[LAVA] = updateLava;
+handlers[MAGMA] = updateMagma;
+handlers[PLASMA] = updatePlasma;
+handlers[ACID] = updateAcid;
+handlers[ACID_VAPOR] = updateAcidVapor;
+handlers[SALT] = updateSalt;
+handlers[SALTWATER] = updateSaltwater;
+handlers[SPARK] = updateSpark;
+handlers[BATTERY] = updateBattery;
+handlers[CLONER] = updateCloner;
+handlers[VOID] = updateVoid;
+handlers[SPOUT] = updateSpout;
+handlers[HEATER] = updateHeater;
+handlers[COOLER] = updateCooler;
+handlers[ANTIGRAV] = updateAntigrav;
+handlers[PLANT] = updatePlant;
+handlers[FUNGUS] = updateFungus;
+handlers[SEED] = updateSeed;
+handlers[POISON] = updatePoison;
+handlers[MAGNESIUM] = updateMagnesium;
+handlers[LIN] = updateLiquidNitrogen;
+handlers[HUMAN] = updateHuman;
+handlers[ZOMBIE] = updateZombie;
+handlers[GHOST] = updateGhost;
+handlers[ROBOT] = updateRobot;
+handlers[SPIDER] = updateSpider;
+handlers[SNAKE] = updateSnake;
+handlers[FIREWORK] = updateFirework;
+handlers[BLACKHOLE] = updateBlackhole;
+handlers[PORTAL] = updatePortal;
+handlers[BOUNCY] = updateBouncy;
+handlers[TRUMP] = updateTrump;
+handlers[CAT] = genericWalker(CAT, 0.45);
+handlers[DOG] = genericWalker(DOG, 0.40);
+handlers[COW] = genericWalker(COW, 0.15);
+handlers[CHICKEN] = genericWalker(CHICKEN, 0.50);
+handlers[SKELETON] = genericWalker(SKELETON, 0.28);
+handlers[WOLF] = genericWalker(WOLF, 0.35);
+handlers[FOX] = genericWalker(FOX, 0.45);
+handlers[BEAR] = genericWalker(BEAR, 0.18);
+handlers[DEER] = genericWalker(DEER, 0.30);
+handlers[RABBIT] = genericWalker(RABBIT, 0.55);
+handlers[MOUSE] = genericWalker(MOUSE, 0.55);
+handlers[RAT] = genericWalker(RAT, 0.50);
+handlers[SQUIRREL] = genericWalker(SQUIRREL, 0.55);
+handlers[RACCOON] = genericWalker(RACCOON, 0.40);
+handlers[BADGER] = genericWalker(BADGER, 0.35);
+handlers[OTTER] = genericWalker(OTTER, 0.35);
+handlers[SEAL] = genericWalker(SEAL, 0.20);
+handlers[CRAB] = genericWalker(CRAB, 0.20);
+handlers[LOBSTER] = genericWalker(LOBSTER, 0.15);
+handlers[STARFISH] = genericWalker(STARFISH, 0.05);
+handlers[TURTLE] = genericWalker(TURTLE, 0.08);
+handlers[FROG] = genericWalker(FROG, 0.40);
+handlers[LIZARD] = genericWalker(LIZARD, 0.45);
+handlers[CROCODILE] = genericWalker(CROCODILE, 0.10);
+handlers[BIRD] = genericFlyer(BIRD, 0.5, false);
+handlers[BEE] = genericFlyer(BEE, 0.5, true);
+handlers[BUTTERFLY] = genericFlyer(BUTTERFLY, 0.4, true);
+handlers[EAGLE] = genericFlyer(EAGLE, 0.5, false);
+handlers[OWL] = genericFlyer(OWL, 0.3, false);
+handlers[HAWK] = genericFlyer(HAWK, 0.5, false);
+handlers[PARROT] = genericFlyer(PARROT, 0.4, false);
+handlers[FISH] = genericSwimmer(FISH, 0.45);
+handlers[WHALE] = genericSwimmer(WHALE, 0.15);
+handlers[DOLPHIN] = genericSwimmer(DOLPHIN, 0.5);
+handlers[SHARK] = genericSwimmer(SHARK, 0.5);
+handlers[OCTOPUS] = genericSwimmer(OCTOPUS, 0.3);
+handlers[SQUID] = genericSwimmer(SQUID, 0.4);
+handlers[SHRIMP] = genericSwimmer(SHRIMP, 0.6);
+handlers[JELLYFISH] = genericSwimmer(JELLYFISH, 0.1);
+
+/* ═══════════ CELL DISPATCH ═══════════ */
+function updateCell(x, y, i) {
+  if (moved[i]) return;
+  const e = cells[i];
+  if (e === EMPTY) { if (temp[i] > AMBIENT+1 || temp[i] < AMBIENT-1) diffuse(x,y,i); return; }
+  if (temp[i] > AMBIENT+1 || temp[i] < AMBIENT-1) diffuse(x,y,i);
+  const el = ELEMENTS[e];
+  if (!el) { cells[i] = EMPTY; return; }
+  if (el.melt && temp[i] > el.melt) { setCell(i, el.meltTo, {temp:temp[i]}); return; }
+  if (el.boil && temp[i] > el.boil) { setCell(i, el.boilTo, {temp:temp[i]}); return; }
+  if (el.freeze && temp[i] < el.freeze) { setCell(i, el.freezeTo, {temp:temp[i]}); return; }
+  if (el.condense && temp[i] < el.condense) { setCell(i, el.condenseTo, {temp:temp[i]}); return; }
+  if (temp[i] > el.ignition) {
+    if (el.explosion) { explode(x,y,el.explosion); return; }
+    setCell(i, FIRE, {temp:800}); return;
+  }
+  if (checkReaction(x, y, i)) return;
+  const h = handlers[e];
+  if (h) { h(x,y,i); return; }
+  if (el.type === 'powder') movePowder(x,y,e);
+  else if (el.type === 'liquid') moveLiquid(x,y,e,el.dispersion);
+  else if (el.type === 'gas') moveGas(x,y,e);
+}
+
+/* ═══════════ SIMULATION STEP ═══════════ */
+function step() {
+  moved.fill(0);
+  updateTrumpUnits();
+  for (let cy = chunkRows-1; cy >= 0; cy--) {
+    const rowBase = cy*chunkCols;
+    for (let cx = 0; cx < chunkCols; cx++) {
+      if (!active[rowBase+cx]) continue;
+      const x0 = cx*CHUNK, y0 = cy*CHUNK;
+      const x1 = Math.min(x0+CHUNK, W);
+      const y1 = Math.min(y0+CHUNK, H);
+      const flip = (frame+cx+cy) & 1;
+      for (let y = y1-1; y >= y0; y--) {
+        const row = y*W;
+        if (flip) for (let x = x1-1; x >= x0; x--) updateCell(x,y,row+x);
+        else for (let x = x0; x < x1; x++) updateCell(x,y,row+x);
+      }
+    }
+  }
+  const tmp = active; active = nextActive; nextActive = tmp;
+  nextActive.fill(0);
+  frame++;
+  if (weatherRain && Math.random() < 0.4) {
+    const rx = (Math.random()*W)|0;
+    if (cells[rx] === EMPTY) { setCell(rx, WATER); dirty(rx,0); }
+  }
+  if (nightMode) dayPhase = (dayPhase + 0.001) % 1;
+  for (let k = particles.length - 1; k >= 0; k--) {
+    const p = particles[k];
+    p.x += p.vx; p.y += p.vy;
+    p.vx *= 0.92; p.vy *= 0.92;
+    p.life--;
+    if (p.life <= 0) particles.splice(k, 1);
+  }
+  if (shakeAmount > 0) shakeAmount *= 0.9;
+  if (flashAmount > 0) flashAmount *= 0.85;
+}
+
+/* ═══════════ RENDER ═══════════ */
+function render() {
+  let skyTint = 0;
+  if (nightMode) { const t = Math.sin(dayPhase*Math.PI*2); skyTint = t < 0 ? -t*0.6 : 0; }
+
+  const {offsets: trumpOffsets, phantoms: trumpPhantoms} = computeTrumpRenderData();
+
+  for (let i = 0; i < N; i++) {
+    const e = cells[i];
+    let c, g = 0;
+    if (showTemp) {
+      c = tempColor(temp[i]);
+      if (e !== EMPTY && temp[i] > 500) { const f = Math.min(1, (temp[i]-500)/1200); g = rgb(255*f, 100*f*f, 20*f*f*f); }
+    } else if (e === EMPTY) {
+      c = bg[i];
+      if (skyTint > 0) {
+        const b = (c >> 16) & 0xFF, gr = (c >> 8) & 0xFF, r = c & 0xFF;
+        c = rgb(r*(1-skyTint*0.5), gr*(1-skyTint*0.5), b*(1-skyTint*0.3));
+      }
+    } else if (e === FIRE) {
+      const k = life[i] >> 2;
+      c = FIRE_PAL[k > 15 ? 15 : k];
+      g = rgb(255, 120, 30);
+    } else if (e === TRUMP) {
+      if (trumpOffsets.has(i)) {
+        buf32[i] = bg[i];
+        glow32[i] = 0;
+        continue;
+      }
+      c = TRUMP_COLORS[cvar[i] & 7];
+      if (temp[i] > 420) { const f = Math.min(1, (temp[i]-420)/1000); g = rgb(255*f, 110*f*f, 30*f*f*f); }
+    } else {
+      const el = ELEMENTS[e];
+      if (!el) { c = rgb(255,0,255); }
+      else {
+        c = palette[e*8 + (cvar[i] & 7)];
+        if (rainbowMode) {
+          const t = (frame * 0.02 + i * 0.0001) % 1;
+          c = rgb(255 * Math.abs(Math.sin(t * Math.PI)), 255 * Math.abs(Math.sin((t + 0.33) * Math.PI)), 255 * Math.abs(Math.sin((t + 0.66) * Math.PI)));
+        }
+        if (el.glow) g = rgb(el.glow[0], el.glow[1], el.glow[2]);
+        else if (temp[i] > 420) { const f = Math.min(1, (temp[i]-420)/1000); g = rgb(255*f, 110*f*f, 30*f*f*f); }
+      }
+    }
+    buf32[i] = c; glow32[i] = g;
+  }
+
+  for (const [i, o] of trumpOffsets) {
+    const x = i % W, y = (i/W)|0;
+    const tx = x + o.ox, ty = y + o.oy;
+    if (tx < 0 || tx >= W || ty < 0 || ty >= H) continue;
+    const ti = ty * W + tx;
+    const cv = o.cvOverride >= 0 ? o.cvOverride : (cvar[i] & 7);
+    buf32[ti] = TRUMP_COLORS[cv];
+  }
+
+  for (const p of trumpPhantoms) {
+    const i = p.y * W + p.x;
+    if (cells[i] === EMPTY || (cells[i] === TRUMP && trumpOwner[i])) {
+      buf32[i] = TRUMP_COLORS[p.cv];
+    }
+  }
+
+  offCtx.putImageData(imgData, 0, 0);
+  const cw = canvas.width, ch = canvas.height;
+  const viewW = cw/(PIXEL*viewZoom), viewH = ch/(PIXEL*viewZoom);
+  const sx = (Math.random() - 0.5) * shakeAmount;
+  const sy = (Math.random() - 0.5) * shakeAmount;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+  ctx.imageSmoothingEnabled = viewZoom > 1;
+  ctx.drawImage(offCanvas, viewPanX, viewPanY, viewW, viewH, sx, sy, cw, ch);
+  glowCtx.putImageData(glowData, 0, 0);
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.imageSmoothingEnabled = true;
+  ctx.globalAlpha = 0.55;
+  ctx.drawImage(glowCanvas, viewPanX, viewPanY, viewW, viewH, sx, sy, cw, ch);
+  if (particles.length > 0) {
+    ctx.imageSmoothingEnabled = false;
+    for (const p of particles) {
+      const px = (p.x - viewPanX) * PIXEL * viewZoom + sx;
+      const py = (p.y - viewPanY) * PIXEL * viewZoom + sy;
+      const alpha = p.life / p.maxLife;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = `rgba(${(p.color >> 0) & 0xFF},${(p.color >> 8) & 0xFF},${(p.color >> 16) & 0xFF},${alpha})`;
+      const s = p.size * PIXEL * viewZoom;
+      ctx.fillRect(px, py, s, s);
+    }
+  }
+  if (flashAmount > 0.01) {
+    ctx.globalAlpha = flashAmount;
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, cw, ch);
+  }
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+  if (showGrid) {
+    const s = PIXEL * viewZoom;
+    ctx.strokeStyle = 'rgba(255,255,255,.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    const gx0 = Math.ceil(viewPanX/8)*8, gy0 = Math.ceil(viewPanY/8)*8;
+    for (let gx = gx0; gx < viewPanX+viewW; gx += 8) { const gsx = (gx-viewPanX)*s; ctx.moveTo(gsx,0); ctx.lineTo(gsx,ch); }
+    for (let gy = gy0; gy < viewPanY+viewH; gy += 8) { const gsy = (gy-viewPanY)*s; ctx.moveTo(0,gsy); ctx.lineTo(cw,gsy); }
+    ctx.stroke();
+  }
+}
+function updateMinimap() {
+  miniCtx.imageSmoothingEnabled = true;
+  miniCtx.clearRect(0, 0, MINI_W, MINI_H);
+  miniCtx.drawImage(offCanvas, 0, 0, W, H, 0, 0, MINI_W, MINI_H);
+  const viewW = canvas.width/(PIXEL*viewZoom), viewH = canvas.height/(PIXEL*viewZoom);
+  miniCtx.strokeStyle = '#5ee0a0';
+  miniCtx.lineWidth = 1;
+  miniCtx.strokeRect(viewPanX/W*MINI_W, viewPanY/H*MINI_H, viewW/W*MINI_W, viewH/H*MINI_H);
+}
+
+/* ═══════════ PAINTING ═══════════ */
+function paintAt(gx, gy, elem) {
+  if (elem === TRUMP) { paintTrump(gx, gy); return; }
+  const r = brushSize, r2 = r*r;
+  for (let dy = -r; dy <= r; dy++) {
+    const y = gy+dy;
+    if (y < 0 || y >= H) continue;
+    for (let dx = -r; dx <= r; dx++) {
+      if (dx*dx+dy*dy > r2) continue;
+      const x = gx+dx;
+      if (x < 0 || x >= W) continue;
+      const i = y*W+x;
+      if (elem === EMPTY) { cells[i] = EMPTY; life[i] = 0; temp[i] = AMBIENT; if (trumpOwner) trumpOwner[i] = 0; }
+      else setCell(i, elem);
+      dirty(x,y);
+    }
+  }
+}
+function stamp(gx, gy, elem) {
+  paintAt(gx, gy, elem);
+  if (symmetry) paintAt(W-1-gx, gy, elem);
+}
+function heatBrush(gx, gy, delta) {
+  const r = brushSize, r2 = r*r;
+  for (let dy = -r; dy <= r; dy++) {
+    const y = gy+dy;
+    if (y < 0 || y >= H) continue;
+    for (let dx = -r; dx <= r; dx++) {
+      if (dx*dx+dy*dy > r2) continue;
+      const x = gx+dx;
+      if (x < 0 || x >= W) continue;
+      const i = y*W+x;
+      temp[i] += delta;
+      if (temp[i] > 3000) temp[i] = 3000;
+      if (temp[i] < -200) temp[i] = -200;
+      dirty(x,y);
+    }
+  }
+}
+function strokeLine(x0, y0, x1, y1, elem) {
+  const dx = x1-x0, dy = y1-y0;
+  const steps = Math.max(Math.abs(dx), Math.abs(dy));
+  if (steps === 0) { stamp(x1, y1, elem); return; }
+  for (let s = 0; s <= steps; s++) stamp(Math.round(x0+dx*s/steps), Math.round(y0+dy*s/steps), elem);
+}
+function drawRect(x0, y0, x1, y1, elem) {
+  const xa = Math.min(x0,x1), xb = Math.max(x0,x1);
+  const ya = Math.min(y0,y1), yb = Math.max(y0,y1);
+  for (let y = ya; y <= yb; y++) for (let x = xa; x <= xb; x++) stamp(x, y, elem);
+}
+function floodFill(x0, y0, newElem) {
+  if (newElem === TRUMP) { paintTrump(x0, y0); return; }
+  if (x0 < 0 || x0 >= W || y0 < 0 || y0 >= H) return;
+  const target = cells[y0*W+x0];
+  if (target === newElem) return;
+  const stack = [[x0,y0]];
+  const visited = new Uint8Array(N);
+  while (stack.length) {
+    const [x,y] = stack.pop();
+    if (x < 0 || x >= W || y < 0 || y >= H) continue;
+    const i = y*W+x;
+    if (visited[i]) continue;
+    if (cells[i] !== target) continue;
+    visited[i] = 1;
+    if (newElem === EMPTY) { cells[i] = EMPTY; life[i] = 0; temp[i] = AMBIENT; if (trumpOwner) trumpOwner[i] = 0; }
+    else setCell(i, newElem);
+    dirty(x,y);
+    stack.push([x-1,y],[x+1,y],[x,y-1],[x,y+1]);
+  }
+}
+
+/* ═══════════ FUN TOOL ACTIONS ═══════════ */
+function toolExplosion(gx, gy) { explode(gx, gy, 8 + Math.floor(brushSize * 0.8)); }
+function toolMeteor(gx, gy) {
+  for (let dy = 0; dy < Math.min(gy, H); dy++) { setCell(dy * W + gx, LAVA, {temp: 1500}); dirty(gx, dy); }
+  explode(gx, gy, 10);
+  spawnParticles(gx, gy, 30, rgb(255, 150, 50), 4);
+  shakeAmount = Math.min(40, shakeAmount + 25);
+  flashAmount = 0.6;
+}
+function toolTornado(gx, gy) {
+  for (let dy = -8; dy <= 8; dy++) for (let dx = -6; dx <= 6; dx++) {
+    const rad = Math.sqrt(dx*dx + dy*dy);
+    if (rad > 7) continue;
+    const x = gx + dx, y = gy + dy;
+    if (x < 0 || x >= W || y < 0 || y >= H) continue;
+    const j = y * W + x;
+    const t = cells[j];
+    if (t === EMPTY || ELEMENTS[t].type === 'static') continue;
+    const angle = Math.atan2(dy, dx) + Math.PI / 2;
+    const tx = x + Math.round(Math.cos(angle));
+    const ty = y + Math.round(Math.sin(angle));
+    if (tx >= 0 && tx < W && ty >= 0 && ty < H && cells[ty*W+tx] === EMPTY) moveTo(x, y, tx, ty);
+  }
+}
+
+/* ═══════════ UI PALETTE ═══════════ */
+const elementsEl = document.getElementById('elements');
+const tabsEl = document.getElementById('tabs');
+const searchInput = document.getElementById('searchInput');
+const buttons = new Array(ELEMENTS.length);
+
+const TABS = [
+  {key:'all',label:'All'},{key:'fun',label:'Fun'},
+  {key:'tool',label:'Tools'},{key:'life',label:'Life'},{key:'creature',label:'Creatures'},
+  {key:'bio',label:'Bio'},{key:'gas',label:'Gases'},{key:'liquid',label:'Liquids'},
+  {key:'drink',label:'Drinks'},{key:'chem',label:'Chems'},{key:'powder',label:'Powders'},
+  {key:'food',label:'Food'},{key:'solid',label:'Solids'},{key:'gem',label:'Gems'},
+  {key:'metal',label:'Metals'},{key:'stone',label:'Stones'},{key:'wood',label:'Woods'},
+  {key:'fabric',label:'Fabrics'},{key:'building',label:'Building'},{key:'plant',label:'Plants'},
+  {key:'precious',label:'Precious'},{key:'weather',label:'Weather'},{key:'misc',label:'Misc'},
+];
+for (const t of TABS) {
+  const b = document.createElement('button');
+  b.className = 'tab'; b.textContent = t.label; b.dataset.tab = t.key;
+  b.onclick = () => setTab(t.key);
+  tabsEl.appendChild(b);
+}
+let activeTab = 'all';
+function applyFilter() {
+  const q = searchInput.value.toLowerCase().trim();
+  for (let i = 0; i < buttons.length; i++) {
+    const btn = buttons[i];
+    if (!btn) continue;
+    const catOk = activeTab === 'all' || btn.dataset.cat === activeTab;
+    const matchOk = !q || btn.dataset.name.toLowerCase().includes(q);
+    btn.classList.toggle('hidden', !(catOk && matchOk));
+  }
+}
+function setTab(key) {
+  activeTab = key;
+  for (const b of tabsEl.children) b.classList.toggle('on', b.dataset.tab === key);
+  applyFilter(); elementsEl.scrollTop = 0;
+}
+searchInput.oninput = applyFilter;
+
+for (const el of ELEMENTS) {
+  const b = document.createElement('button');
+  b.className = 'el'; b.dataset.cat = el.cat || 'solid'; b.dataset.name = el.name; b.title = el.name;
+  const sw = document.createElement('span'); sw.className = 'sw';
+  sw.style.background = el.id === EMPTY ? 'linear-gradient(135deg,#2a2a35,#15151c)' : `rgb(${el.color[0]},${el.color[1]},${el.color[2]})`;
+  const lbl = document.createElement('span'); lbl.textContent = el.name;
+  b.append(sw, lbl);
+  b.onclick = () => selectElement(el.id);
+  elementsEl.appendChild(b);
+  buttons[el.id] = b;
+}
+function selectElement(id) {
+  currentElement = id;
+  for (const b of buttons) if (b) b.classList.remove('on');
+  if (buttons[id]) buttons[id].classList.add('on');
+  updateInfoPanel(id);
+}
+function updateInfoPanel(id) {
+  const el = ELEMENTS[id];
+  document.getElementById('infoContent').innerHTML =
+    `<b style="color:rgb(${el.color.join(',')})">${el.name}</b><br>` +
+    `<span style="color:#8c8ca0">cat: ${el.cat} · type: ${el.type}</span><br>` +
+    `<span style="color:#8c8ca0">density: ${el.density}</span><br>` +
+    (el.melt ? `<span style="color:#ff9b6b">melt ${el.melt}°</span><br>` : '') +
+    (el.boil ? `<span style="color:#6bb5ff">boil ${el.boil}°</span><br>` : '') +
+    (el.ignition && el.ignition !== Infinity ? `<span style="color:#ff6b6b">ignition ${el.ignition}°</span>` : '');
+  document.getElementById('infoPanel').classList.add('show');
+}
+setTab('all');
+selectElement(SAND);
+
+/* ═══════════ UI TOOLS ═══════════ */
+const brushInput = document.getElementById('brush');
+const brushVal = document.getElementById('brushVal');
+brushInput.oninput = () => { brushSize = +brushInput.value; brushVal.textContent = brushSize; };
+const speedInput = document.getElementById('speed');
+const speedVal = document.getElementById('speedVal');
+speedInput.oninput = () => { speedMult = parseFloat(speedInput.value); speedVal.textContent = speedMult + 'x'; };
+const toolBtns = Array.from(document.querySelectorAll('[data-tool]'));
+function selectTool(name) { currentTool = name; toolBtns.forEach(b => b.classList.toggle('on', b.dataset.tool === name)); }
+toolBtns.forEach(b => b.onclick = () => selectTool(b.dataset.tool));
+selectTool('brush');
+
+const pauseBtn = document.getElementById('pauseBtn');
+pauseBtn.onclick = () => { paused = !paused; pauseBtn.textContent = paused ? 'Resume' : 'Pause'; pauseBtn.classList.toggle('on', paused); };
+const symBtn = document.getElementById('symBtn');
+symBtn.onclick = () => { symmetry = !symmetry; symBtn.classList.toggle('on', symmetry); };
+const tempBtn = document.getElementById('tempBtn');
+tempBtn.onclick = () => { showTemp = !showTemp; tempBtn.classList.toggle('on', showTemp); };
+const randomBtn = document.getElementById('randomBtn');
+randomBtn.onclick = () => { randomBrush = !randomBrush; randomBtn.classList.toggle('on', randomBrush); };
+const gridBtn = document.getElementById('gridBtn');
+gridBtn.onclick = () => { showGrid = !showGrid; gridBtn.classList.toggle('on', showGrid); };
+const statsBtn = document.getElementById('statsBtn');
+statsBtn.onclick = () => { document.getElementById('statsPanel').classList.toggle('show'); statsBtn.classList.toggle('on'); };
+const logBtn = document.getElementById('logBtn');
+logBtn.onclick = () => {
+  logVisible = !logVisible;
+  logBtn.classList.toggle('on', logVisible);
+  document.getElementById('logPanel').classList.toggle('show', logVisible);
+  if (logVisible) logDirty = true;
+};
+const weatherBtn = document.getElementById('weatherBtn');
+weatherBtn.onclick = () => { weatherRain = !weatherRain; weatherBtn.classList.toggle('on', weatherRain); };
+const nightBtn = document.getElementById('nightBtn');
+nightBtn.onclick = () => { nightMode = !nightMode; nightBtn.classList.toggle('on', nightMode); };
+const soundBtn = document.getElementById('soundBtn');
+soundBtn.onclick = () => { soundEnabled = !soundEnabled; soundBtn.classList.toggle('on', soundEnabled); soundBtn.textContent = soundEnabled ? '🔊' : '🔇'; };
+soundBtn.classList.add('on');
+const slowBtn = document.getElementById('slowBtn');
+slowBtn.onclick = () => { slowMotion = !slowMotion; slowBtn.classList.toggle('on', slowMotion); };
+const rainbowBtn = document.getElementById('rainbowBtn');
+rainbowBtn.onclick = () => { rainbowMode = !rainbowMode; rainbowBtn.classList.toggle('on', rainbowMode); };
+const fullBtn = document.getElementById('fullBtn');
+fullBtn.onclick = () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen?.().catch(() => {});
+    fullBtn.classList.add('on');
+  } else { document.exitFullscreen?.(); fullBtn.classList.remove('on'); }
+};
+document.getElementById('stepBtn').onclick = () => { if (paused) { step(); render(); updateMinimap(); } };
+
+/* ═══════════ UNDO / REDO ═══════════ */
+const undoStack = [], redoStack = [];
+const MAX_UNDO = 20;
+function snapshot() {
+  undoStack.push(cells.slice());
+  if (undoStack.length > MAX_UNDO) undoStack.shift();
+  redoStack.length = 0;
+  updateUndoBtns();
+}
+function doUndo() {
+  if (!undoStack.length) return;
+  redoStack.push(cells.slice());
+  cells.set(undoStack.pop());
+  markAllActive(); updateUndoBtns();
+}
+function doRedo() {
+  if (!redoStack.length) return;
+  undoStack.push(cells.slice());
+  cells.set(redoStack.pop());
+  markAllActive(); updateUndoBtns();
+}
+function updateUndoBtns() {
+  document.getElementById('undoBtn').disabled = undoStack.length === 0;
+  document.getElementById('redoBtn').disabled = redoStack.length === 0;
+}
+document.getElementById('undoBtn').onclick = doUndo;
+document.getElementById('redoBtn').onclick = doRedo;
+updateUndoBtns();
+document.getElementById('clearBtn').onclick = () => {
+  snapshot();
+  cells.fill(EMPTY); life.fill(0); temp.fill(AMBIENT);
+  if (trumpOwner) trumpOwner.fill(0);
+  trumpUnits.length = 0;
+  for (let i = 0; i < N; i++) cvar[i] = (Math.random()*8)|0;
+  markAllActive();
+};
+
+/* ═══════════ SAVE / LOAD ═══════════ */
+function toB64(u8) { let s = ''; const CH = 0x8000; for (let i = 0; i < u8.length; i += CH) s += String.fromCharCode.apply(null, u8.subarray(i, i+CH)); return btoa(s); }
+function fromB64(str) { const b = atob(str); const u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; }
+const slotSel = document.getElementById('slotSel');
+document.getElementById('saveBtn').onclick = () => {
+  try {
+    const slot = slotSel.value;
+    const data = { w: W, h: H, cells: toB64(new Uint8Array(cells.buffer)), temp: toB64(new Uint8Array(temp.buffer)), life: toB64(new Uint8Array(life.buffer)) };
+    localStorage.setItem('elemental-sandbox-v9-' + slot, JSON.stringify(data));
+    toast('Saved slot ' + slot);
+  } catch(e) { toast('Save failed: ' + e.message); }
+};
+document.getElementById('loadBtn').onclick = () => {
+  try {
+    const slot = slotSel.value;
+    const raw = localStorage.getItem('elemental-sandbox-v9-' + slot);
+    if (!raw) return toast('Empty slot ' + slot);
+    const data = JSON.parse(raw);
+    if (data.w !== W || data.h !== H) allocate(data.w, data.h);
+    cells.set(new Uint16Array(fromB64(data.cells).buffer));
+    temp.set(new Float32Array(fromB64(data.temp).buffer));
+    life.set(new Uint16Array(fromB64(data.life).buffer));
+    trumpUnits.length = 0;
+    markAllActive();
+    toast('Loaded slot ' + slot);
+  } catch(e) { toast('Load failed: ' + e.message); }
+};
+document.getElementById('shotBtn').onclick = () => {
+  render();
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'sandbox-' + Date.now() + '.png'; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+};
+document.getElementById('zoomIn').onclick = () => setZoom(viewZoom * 1.4);
+document.getElementById('zoomOut').onclick = () => setZoom(viewZoom / 1.4);
+document.getElementById('zoomReset').onclick = () => { viewZoom = 1; viewPanX = 0; viewPanY = 0; clampView(); };
+
+/* ═══════════ SCENES ═══════════ */
+const presetSel = document.getElementById('presetSel');
+let lastPreset = 'garden';
+presetSel.onchange = () => { const v = presetSel.value; if (!v) return; snapshot(); applyPreset(v); lastPreset = v; presetSel.value = ''; };
+document.getElementById('resetBtn').onclick = () => { snapshot(); applyPreset(lastPreset); toast('Reset'); };
+
+function blankWorld() {
+  cells.fill(EMPTY); life.fill(0); temp.fill(AMBIENT);
+  if (trumpOwner) trumpOwner.fill(0);
+  trumpUnits.length = 0;
+  for (let i = 0; i < N; i++) cvar[i] = (Math.random()*8)|0;
+}
+function eid(name) { const e = EL[name]; return e ? e.id : EMPTY; }
+
+function applyPreset(name) {
+  blankWorld();
+  const floorY = H - Math.max(4, (H*0.08)|0);
+  if (name === 'blank') { markAllActive(); return; }
+  for (let y = floorY; y < H; y++) for (let x = 0; x < W; x++) setCell(y*W+x, STONE);
+
+  if (name === 'trump') {
+    const cx = W/2|0;
+    const cy = floorY - 40;
+    paintTrump(cx, cy);
+    for (let i = 0; i < 8; i++) { const x = cx - 60 + i * 15; if (x >= 0 && x < W) setCell((floorY-3)*W+x, HUMAN); }
+    for (let i = 0; i < 3; i++) { const x = 20 + Math.floor(Math.random() * (W-40)); setCell((floorY-3)*W+x, FIREWORK); }
+    for (let y = floorY-2; y < floorY; y++) for (let x = 0; x < W; x++) setCell(y*W+x, DIRT);
+  } else if (name === 'garden' || name === 'forest') {
+    const dd = name === 'forest' ? 8 : 5;
+    for (let y = floorY-dd; y < floorY; y++) for (let x = 0; x < W; x++) setCell(y*W+x, DIRT);
+    if (name === 'forest') {
+      const tc = Math.max(3, W/30|0);
+      for (let t = 0; t < tc; t++) {
+        const tx = 20 + Math.floor(Math.random()*(W-40));
+        const th = 25 + (Math.random()*25|0);
+        for (let h = 0; h < th; h++) { const y = floorY-dd-h; if (y < 0) break; setCell(y*W+tx, WOOD); }
+        const topY = floorY-dd-th;
+        for (let dy = -6; dy <= 6; dy++) for (let dx = -8; dx <= 8; dx++) {
+          if (dx*dx+dy*dy > 60) continue;
+          const x = tx+dx, y = topY+dy;
+          if (x < 0 || x >= W || y < 0 || y >= H) continue;
+          if (cells[y*W+x] === EMPTY && Math.random() < 0.85) setCell(y*W+x, PLANT);
+        }
+      }
+    } else {
+      const cx = (W*0.7)|0, peak = floorY-dd-30;
+      for (let y = peak; y < floorY-dd; y++) {
+        const t = (y-peak)/(floorY-dd-peak);
+        const half = Math.round(6+t*40);
+        for (let x = cx-half; x <= cx+half; x++) {
+          if (x < 0 || x >= W) continue;
+          if (cells[y*W+x] === EMPTY) setCell(y*W+x, SAND);
+        }
+      }
+      const bx = (W*0.22)|0;
+      for (let y = floorY-dd-14; y < floorY-dd; y++)
+        for (let x = bx-24; x <= bx+24; x++) { if (x < 0 || x >= W) continue; if (cells[y*W+x] === EMPTY) setCell(y*W+x, WATER); }
+      for (let p = 0; p < 8; p++) {
+        const px = 15 + Math.floor(Math.random()*(W-30)), py = floorY-dd-1;
+        if (py < 0) continue;
+        if (cells[py*W+px] === EMPTY) { const ph = 3+(Math.random()*8|0); for (let h = 1; h <= ph; h++) { if (py-h < 0) break; setCell((py-h)*W+px, PLANT); } }
+      }
+    }
+  } else if (name === 'winter') {
+    for (let y = floorY-20; y < floorY; y++) for (let x = 0; x < W; x++) if (cells[y*W+x] === EMPTY) setCell(y*W+x, SNOW);
+    for (let y = floorY-4; y < floorY; y++) for (let x = 0; x < W; x++) setCell(y*W+x, ICE);
+  } else if (name === 'ocean') {
+    for (let y = floorY-60; y < floorY; y++) for (let x = 0; x < W; x++) if (cells[y*W+x] === EMPTY) setCell(y*W+x, WATER);
+  } else if (name === 'volcano') {
+    const cx = (W/2)|0, peakY = floorY - Math.min(90, (H*0.55)|0);
+    for (let y = peakY; y < floorY; y++) {
+      const t = (y-peakY)/(floorY-peakY), half = Math.round(60-t*50);
+      for (let x = cx-half; x <= cx+half; x++) { if (x < 0 || x >= W) continue; if (cells[y*W+x] === EMPTY) setCell(y*W+x, STONE); }
+    }
+    for (let y = peakY-6; y <= peakY; y++) for (let x = cx-8; x <= cx+8; x++) { if (x < 0 || x >= W || y < 0 || y >= H) continue; setCell(y*W+x, LAVA); }
+  } else if (name === 'reactor') {
+    const cx = (W/2)|0;
+    for (let i = 0; i < 12; i++) { const x = cx-40+i*7; if (x < 0 || x >= W) continue; setCell((floorY-20)*W+x, i % 2 === 0 ? HEATER : COOLER); }
+    for (let i = 0; i < 20; i++) { const x = 20+Math.floor(Math.random()*(W-40)); const y = floorY-30-(Math.random()*40|0); setCell(y*W+x, WATER); }
+    for (let i = 0; i < 5; i++) {
+      const x = 50+Math.floor(Math.random()*(W-100));
+      setCell((floorY-5)*W+x, BATTERY);
+      setCell((floorY-6)*W+x, WIRE);
+      setCell((floorY-7)*W+x, WIRE);
+      setCell((floorY-8)*W+x, TNT);
+    }
+  } else if (name === 'lab') {
+    const cx = (W/2)|0;
+    for (let y = floorY-8; y < floorY; y++) for (let x = cx-60; x <= cx-20; x++) { if (x < 0 || x >= W) continue; setCell(y*W+x, LAVA); }
+    for (let y = floorY-8; y < floorY; y++) for (let x = cx+20; x <= cx+60; x++) { if (x < 0 || x >= W) continue; setCell(y*W+x, WATER); }
+    for (let y = floorY-20; y < floorY; y++) setCell(y*W+cx, METAL);
+  } else if (name === 'village') {
+    for (let y = floorY-2; y < floorY; y++) for (let x = 0; x < W; x++) setCell(y*W+x, DIRT);
+    for (let h = 0; h < 3; h++) {
+      const hx = 30+h*70+Math.floor(Math.random()*20), hw = 25, hh = 20;
+      for (let x = hx; x < hx+hw; x++) for (let y = floorY-hh; y < floorY-2; y++) {
+        if (x < 0 || x >= W || y < 0 || y >= H) continue;
+        if (x === hx || x === hx+hw-1 || y === floorY-hh) setCell(y*W+x, WOOD);
+      }
+    }
+    for (let i = 0; i < 8; i++) { const x = 20+Math.floor(Math.random()*(W-40)); setCell((floorY-3)*W+x, HUMAN); }
+    for (let i = 0; i < 4; i++) { const x = Math.floor(W*0.7+Math.random()*(W*0.25)); if (x < W) setCell((floorY-3)*W+x, ZOMBIE); }
+    for (let i = 0; i < 3; i++) { const x = 20+Math.floor(Math.random()*(W-40)); setCell((floorY-3)*W+x, COW); }
+    for (let i = 0; i < 4; i++) { const x = 20+Math.floor(Math.random()*(W-40)); setCell((floorY-3)*W+x, CHICKEN); }
+  } else if (name === 'city') {
+    for (let y = floorY-3; y < floorY; y++) for (let x = 0; x < W; x++) setCell(y*W+x, eid('Asphalt'));
+    for (let i = 0; i < 8; i++) {
+      const bw = 20+Math.floor(Math.random()*15), bh = 40+Math.floor(Math.random()*40);
+      const bx = 10+i*(W-20)/8;
+      for (let x = bx; x < bx+bw && x < W; x++) for (let y = floorY-3-bh; y < floorY-3; y++) {
+        if (x < 0 || y < 0 || y >= H) continue;
+        if (x === bx || x === bx+bw-1 || y === floorY-3-bh) setCell(y*W+x, eid('Cement'));
+        else if (Math.random() < 0.02) setCell(y*W+x, GLASS);
+      }
+    }
+    for (let i = 0; i < 10; i++) { const x = 20+Math.floor(Math.random()*(W-40)); setCell((floorY-4)*W+x, HUMAN); }
+  } else if (name === 'zoo') {
+    for (let y = floorY-2; y < floorY; y++) for (let x = 0; x < W; x++) setCell(y*W+x, eid('Grass'));
+    const cages = [{x:20,w:80},{x:120,w:80},{x:220,w:80},{x:320,w:80}];
+    for (const c of cages) for (let y = floorY-30; y < floorY-2; y++) { setCell(y*W+c.x, GLASS); setCell(y*W+c.x+c.w, GLASS); }
+    const animals = [WOLF, FOX, BEAR, DEER, RABBIT, MOUSE, RAT, SQUIRREL];
+    for (let i = 0; i < animals.length; i++) {
+      const c = cages[i % cages.length];
+      const x = c.x+5+Math.floor(Math.random()*(c.w-10));
+      setCell((floorY-4)*W+x, animals[i]);
+    }
+  }
+  markAllActive();
+}
+
+/* ═══════════ TOAST ═══════════ */
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function toast(msg) {
+  toastEl.textContent = msg; toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1400);
+}
+
+/* ═══════════ INPUT ═══════════ */
+let drawing = false, erasing = false, lastX = -1, lastY = -1;
+let dragStart = null, savedCells = null;
+const tooltipEl = document.getElementById('tooltip');
+const coordEl = document.getElementById('coordPanel');
+
+function toGrid(ev) {
+  const r = canvas.getBoundingClientRect();
+  const scale = PIXEL * viewZoom;
+  return [Math.floor(viewPanX + (ev.clientX - r.left)/scale), Math.floor(viewPanY + (ev.clientY - r.top)/scale)];
+}
+function getPaintElem() {
+  if (randomBrush) { const pool = ELEMENTS.filter(e => e.id !== EMPTY && e.cat !== 'tool'); return pool[Math.floor(Math.random()*pool.length)].id; }
+  return (erasing || currentTool === 'erase') ? EMPTY : currentElement;
+}
+canvas.addEventListener('pointerdown', ev => {
+  if (ev.button === 1) { ev.preventDefault(); panning = true; panStartX = ev.clientX; panStartY = ev.clientY; panStartPanX = viewPanX; panStartPanY = viewPanY; canvas.setPointerCapture(ev.pointerId); return; }
+  canvas.setPointerCapture(ev.pointerId);
+  drawing = true;
+  erasing = ev.button === 2 || ev.shiftKey;
+  const [gx, gy] = toGrid(ev);
+  lastX = gx; lastY = gy;
+  if (currentTool === 'explosion') { snapshot(); toolExplosion(gx, gy); drawing = false; return; }
+  if (currentTool === 'meteor') { snapshot(); toolMeteor(gx, gy); drawing = false; return; }
+  if (currentTool === 'tornado') { snapshot(); toolTornado(gx, gy); drawing = false; return; }
+  if (currentTool === 'eyedropper') {
+    if (gx >= 0 && gx < W && gy >= 0 && gy < H) {
+      const e = cells[gy*W+gx];
+      if (e !== EMPTY) { selectElement(e); setTab('all'); toast(`${ELEMENTS[e].name} · ${temp[gy*W+gx].toFixed(0)}°`); }
+    }
+    drawing = false; return;
+  }
+  if (currentTool === 'heat') { heatBrush(gx, gy, 200); drawing = false; return; }
+  if (currentTool === 'cool') { heatBrush(gx, gy, -200); drawing = false; return; }
+  if (currentTool === 'fill') { snapshot(); floodFill(gx, gy, getPaintElem()); drawing = false; return; }
+  snapshot();
+  if (currentTool === 'line' || currentTool === 'rect') { dragStart = [gx, gy]; savedCells = cells.slice(); }
+  else stamp(gx, gy, getPaintElem());
+  ev.preventDefault();
+});
+canvas.addEventListener('pointermove', ev => {
+  if (panning) {
+    const scale = PIXEL*viewZoom;
+    viewPanX = panStartPanX - (ev.clientX-panStartX)/scale;
+    viewPanY = panStartPanY - (ev.clientY-panStartY)/scale;
+    clampView(); return;
+  }
+  const [gx, gy] = toGrid(ev);
+  coordEl.textContent = `${gx}, ${gy}`;
+  if (!drawing) {
+    if (gx >= 0 && gx < W && gy >= 0 && gy < H && cells[gy*W+gx] !== EMPTY) {
+      const i = gy*W+gx;
+      const el = ELEMENTS[cells[i]];
+      let hints = '';
+      const m = RX_MAP.get(cells[i]);
+      if (m) { const parts = []; for (const [k] of m) parts.push(ELEMENTS[k].name); hints = '\nreacts: ' + parts.slice(0, 3).join(', '); }
+      tooltipEl.textContent = `${el.name} · ${temp[i].toFixed(0)}°${hints}`;
+      tooltipEl.style.left = (ev.clientX+14)+'px';
+      tooltipEl.style.top = (ev.clientY+14)+'px';
+      tooltipEl.style.display = 'block';
+    } else tooltipEl.style.display = 'none';
+  } else tooltipEl.style.display = 'none';
+  if (!drawing) return;
+  if (currentTool === 'heat') { heatBrush(gx, gy, 200); return; }
+  if (currentTool === 'cool') { heatBrush(gx, gy, -200); return; }
+  if (currentTool === 'explosion') { if (Math.random() < 0.3) toolExplosion(gx, gy); return; }
+  if (currentTool === 'tornado') { toolTornado(gx, gy); return; }
+  if (currentTool === 'line' && dragStart) { cells.set(savedCells); strokeLine(dragStart[0], dragStart[1], gx, gy, getPaintElem()); markAllActive(); return; }
+  if (currentTool === 'rect' && dragStart) { cells.set(savedCells); drawRect(dragStart[0], dragStart[1], gx, gy, getPaintElem()); markAllActive(); return; }
+  if (currentTool === 'fill') return;
+  if (gx === lastX && gy === lastY) return;
+  strokeLine(lastX, lastY, gx, gy, getPaintElem());
+  lastX = gx; lastY = gy;
+});
+function endStroke() { if (panning) { panning = false; return; } drawing = false; dragStart = null; savedCells = null; lastX = lastY = -1; }
+canvas.addEventListener('pointerup', endStroke);
+canvas.addEventListener('pointercancel', endStroke);
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('wheel', ev => {
+  ev.preventDefault();
+  if (ev.ctrlKey || ev.metaKey) {
+    const r = canvas.getBoundingClientRect();
+    setZoom(viewZoom * (ev.deltaY > 0 ? 0.9 : 1.1), ev.clientX - r.left, ev.clientY - r.top);
+  } else {
+    brushSize = Math.max(1, Math.min(30, brushSize + (ev.deltaY > 0 ? 1 : -1)));
+    brushInput.value = brushSize; brushVal.textContent = brushSize;
+  }
+}, {passive:false});
+
+/* ═══════════ KEYBOARD ═══════════ */
+window.addEventListener('keydown', ev => {
+  if (ev.target.tagName === 'INPUT' || ev.target.tagName === 'SELECT') return;
+  if (ev.key === ' ') { ev.preventDefault(); pauseBtn.click(); return; }
+  if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'z') { ev.preventDefault(); if (ev.shiftKey) doRedo(); else doUndo(); return; }
+  if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 's') { ev.preventDefault(); document.getElementById('saveBtn').click(); return; }
+  if (ev.key === 'c' || ev.key === 'C') { document.getElementById('clearBtn').click(); return; }
+  if (ev.key === 'r' || ev.key === 'R') { document.getElementById('resetBtn').click(); return; }
+  if (ev.key === '0') { document.getElementById('zoomReset').click(); return; }
+  if (ev.key === '+' || ev.key === '=') { document.getElementById('zoomIn').click(); return; }
+  if (ev.key === '-') { document.getElementById('zoomOut').click(); return; }
+  switch (ev.key.toLowerCase()) {
+    case 'b': selectTool('brush'); break;
+    case 'l': selectTool('line'); break;
+    case 'f': selectTool('fill'); break;
+    case 'e': selectTool('erase'); break;
+    case 'm': symBtn.click(); break;
+    case 'h': tempBtn.click(); break;
+    case 'i': selectTool('eyedropper'); break;
+    case 'g': gridBtn.click(); break;
+    case 'x': randomBtn.click(); break;
+  }
+});
+
+/* ═══════════ STATS + LOG PANEL ═══════════ */
+function updateStats() {
+  if (!document.getElementById('statsPanel').classList.contains('show')) return;
+  const counts = new Map();
+  for (let i = 0; i < N; i++) { const e = cells[i]; if (e !== EMPTY) counts.set(e, (counts.get(e) || 0) + 1); }
+  const sorted = [...counts.entries()].sort((a, b) => b[1]-a[1]).slice(0, 5);
+  document.getElementById('statsContent').innerHTML = sorted.map(([e, c]) =>
+    `<div class="stat-row"><span>${ELEMENTS[e].name}</span><span>${c}</span></div>`).join('');
+}
+function updateLogPanel() {
+  if (!logVisible || !logDirty) return;
+  logDirty = false;
+  document.getElementById('logContent').innerHTML = logLines.map(l => `<div class="log-line">${l}</div>`).join('');
+}
+
+/* ═══════════ MAIN LOOP ═══════════ */
+const fpsEl = document.getElementById('fps');
+const cellEl = document.getElementById('cells');
+let fpsAcc = 0, fpsFrames = 0, fpsTimer = 0, lastT = performance.now();
+let lastMinimapT = 0, lastStatsT = 0;
+
+function loop(t) {
+  const dt = t - lastT;
+  lastT = t;
+  if (!paused) {
+    const effectiveSpeed = slowMotion ? speedMult * 0.25 : speedMult;
+    stepAccum += effectiveSpeed;
+    let n = 0;
+    while (stepAccum >= 1 && n < 4) { step(); stepAccum -= 1; n++; }
+  }
+  render();
+  if (t - lastMinimapT > 200) { updateMinimap(); lastMinimapT = t; }
+  if (t - lastStatsT > 500) { updateStats(); lastStatsT = t; }
+  updateLogPanel();
+  fpsAcc += dt; fpsFrames++; fpsTimer += dt;
+  if (fpsTimer > 500) {
+    fpsEl.textContent = Math.round(fpsFrames / (fpsAcc / 1000)) + ' fps';
+    let a = 0; for (let i = 0; i < chunkCount; i++) if (active[i]) a++;
+    cellEl.textContent = `${W}×${H} · ${ELEMENTS.length} els`;
+    fpsAcc = 0; fpsFrames = 0; fpsTimer = 0;
+  }
+  requestAnimationFrame(loop);
+}
+
+/* ═══════════ BOOT ═══════════ */
+window.addEventListener('resize', layout);
+const hudEl = document.getElementById('bottomHud');
+if (window.ResizeObserver && hudEl) {
+  let rafId = 0;
+  new ResizeObserver(() => { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(layout); }).observe(hudEl);
+}
+
+layout();
+applyPreset('garden');
+requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>
